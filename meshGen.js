@@ -66,7 +66,8 @@ window.addEventListener('load', function(ev) {
 			
 		}
 		vertices[vertIndex] = 4*(piX/canvas.width) - 2; // Creates vertices in a 4xN area on Threejs canvas
-		vertices[vertIndex+1] = -4*(piY/canvas.width) + 2; // Using canvas.height would squash/stretch the mesh
+		vertices[vertIndex+1] = -1*(4*(piY/canvas.width) - 2); // Using canvas.height would squash/stretch the mesh.
+		// Above is negative because on canvas positive y is down and in scene positive y is up.
 		vertIndex+=3;
 		
 		vertices[vertIndex] = 2;
