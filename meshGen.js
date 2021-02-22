@@ -85,15 +85,18 @@ window.addEventListener('load', function(ev) {
 		let meshDone = false; // Break variable for edgemaking loop
 		let resolution = 10; // Determines the density of vertices, 1 vertex for every 'resolution' verts (higher # is lower res)
 		let circleSamples = resolution*resolution; // So we don't need to do this a lot, could be lower?
+		let lastAngle = 0; // Hold on to angle so check starts from last angle, not from top.
 		
 		while(true){ // Edge creation loop
 			
 			// Check all pixels 'resolution' distance away from current vert for edges clockwise.
 			// Could use a smaller number than resolution^2? Maybe res*log(res)?
+			// Edge data must be thicker than 1px, if it's 1px then it might miss checks on tight pixel diagonals
 			for(let i = 0; i < circleSamples; i++){
 				// (sampleX+currPX,sampleY+currPY) is the coordinates for the current sampled pixel
-				let sampleX = Math.floor(Math.cos((2*Math.PI*i)/circleSamples)*resolution);
-				let sampleY = Math.floor(Math.sin((2*Math.PI*i)/circleSamples)*resolution);
+				let sampleX = Math.floor(Math.cos((2*Math.PI*(i+lastAngle))/circleSamples)*resolution);
+				let sampleY = Math.floor(Math.sin((2*Math.PI*(i+lastAngle))/circleSamples)*resolution);
+				
 				
 				//console.log(sampleX+currPX);
 				//console.log(sampleY+currPY);
@@ -101,10 +104,13 @@ window.addEventListener('load', function(ev) {
 				// If sampled pixel has a red value of 255 (therefore is white/an edge), make it the new current vertex
 				if(data[4*((sampleX+currPX)+(canvas.width*(sampleY+currPY)))] >= 100){
 					
-					console.log(data[4*((sampleX+currPX)+(canvas.width*(sampleY+currPY)))]);
+					//console.log(data[4*((sampleX+currPX)+(canvas.width*(sampleY+currPY)))]);
 					
 					currPX = sampleX + currPX;
 					currPY = sampleY + currPY;
+					
+					lastAngle = lastAngle+i;
+					console.log(lastAngle);
 					
 					break;
 					
@@ -115,7 +121,7 @@ window.addEventListener('load', function(ev) {
 			
 			// If current vert is within 'resolution-1' px of another vert, end edge creation
 			while(typeof(vertices[iter]) !== 'undefined'){ 
-				if(Math.pow(vertices[iter]-currPX,2)+Math.pow(vertices[iter+1]-currPY,2) <= Math.pow(resolution-1,2)){
+				if(Math.pow(vertices[iter]-currPX,2)+Math.pow(vertices[iter+1]-currPY,2) <= Math.pow(resolution-4,2)){
 					meshDone = true;
 					break;
 				}
