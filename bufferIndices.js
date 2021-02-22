@@ -38,7 +38,7 @@ function init() {
 
 	// generate vertices, normals and color data for a simple grid geometry
 
-	for ( let i = 0; i <= segments; i ++ ) {
+	/*for ( let i = 0; i <= segments; i ++ ) {
 
 		const y = ( i * segmentSize ) - halfSize;
 
@@ -68,7 +68,7 @@ function init() {
 			const b = i * ( segments + 1 ) + j;
 			const c = ( i + 1 ) * ( segments + 1 ) + j;
 			const d = ( i + 1 ) * ( segments + 1 ) + ( j + 1 );
-			
+			*/
 			/*
 			Ok how tf do indices work?
 			
@@ -76,37 +76,48 @@ function init() {
 			
 			These vertices are specified in the vertex array/attribute/thing.
 			For example, say you have 3 vertices in the array: (0,0,0),(0,1,0),(1,0,0).
-				Putting (0,1,2) (?starts at 0?) into the index array/buffer/attribute/thing will tell
-				it to make a face between those verts.
+				Putting (0,1,2) into the index array/buffer/attribute/thing will tell
+				it to make a face between the vert at those indices.
 			*/
 
 			// generate two faces (triangles) per iteration
-
+/*
 			indices.push( a, b, d ); // face one
 			indices.push( b, c, d ); // face two
 
 		}
+		
+	}
 	
 	indices.push(0,2,22);
-	indices.push(0,37,10);
+	indices.push(0,37,10);*/
 	
+	for(let i = 0; i < 24; i++){
+		
+		vertices.push(Math.sin((Math.PI*i)/12)*5,Math.sin(((Math.PI*i)/12)+(Math.PI / 2))*5,0);
+		//normals.push( 0, 0, 1 );
+	}
+
+	for(let i = 1; i < 23; i++){
+		indices.push(0,i,i+1);
 	}
 
 	//
 
 	geometry.setIndex( indices );
 	geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
-	geometry.setAttribute( 'normal', new THREE.Float32BufferAttribute( normals, 3 ) );
-	geometry.setAttribute( 'color', new THREE.Float32BufferAttribute( colors, 3 ) );
+	//geometry.setAttribute( 'normal', new THREE.Float32BufferAttribute( normals, 3 ) );
+	//geometry.setAttribute( 'color', new THREE.Float32BufferAttribute( colors, 3 ) );
 
 	const material = new THREE.MeshBasicMaterial( {
 		side: THREE.DoubleSide,
 		wireframe: true,
-		vertexColors: true
+		//vertexColors: true
 	} );
 
 	mesh = new THREE.Mesh( geometry, material );
 	scene.add( mesh );
+	
 
 	//
 

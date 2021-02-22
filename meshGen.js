@@ -10,11 +10,11 @@ img.onload = function() {
 };
 
 var scene = new THREE.Scene();
-var camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+var camera = new THREE.PerspectiveCamera(100, window.innerWidth/window.innerHeight, 0.1, 1000);
 var renderer = new THREE.WebGLRenderer();
 renderer.setSize(400, 400);
 document.body.appendChild(renderer.domElement);
-camera.position.z = 5;
+camera.position.z = 3;
 
 /*window.addEventListener('load', function(ev) {
 	function invert(){
@@ -46,12 +46,12 @@ scene.add( light );
 window.addEventListener('load', function(ev) {
 	function meshGen(){
 		
-		var vertices = new Float32Array(3000); // Can store 1000 verts max
-		var vertIndex = 0; // Stores current position in vert array
+		const vertices = [];
 		const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 		const data = imageData.data;
 		var piX = 0; // pixelIndexX stores the X index of the pixel we're on
 		var piY = 0; // Same but for y
+		
 		while (piY * canvas.width < data.length) { // While not at end of data
 			let imageIndex = (piX+(canvas.width*piY))*4; // Easier parsing of RGB, stores image data index
 			if(data[imageIndex]+data[imageIndex+1]+data[imageIndex+2] == 765){ //if white
@@ -65,24 +65,85 @@ window.addEventListener('load', function(ev) {
 			}
 			
 		}
-		vertices[vertIndex] = 4*(piX/canvas.width) - 2; // Creates vertices in a 4xN area on Threejs canvas
-		vertices[vertIndex+1] = -1*(4*(piY/canvas.width) - 2); // Using canvas.height would squash/stretch the mesh.
+		
+		//let vertX = 4*(piX/canvas.width) - 2; // Creates vertices in a 4xN area on Threejs canvas
+		//let vertY = -1*(4*(piY/canvas.width) - 2); // Using canvas.height would squash/stretch the mesh.
 		// Above is negative because on canvas positive y is down and in scene positive y is up.
-		vertIndex+=3;
+		vertices.push(piX,piY,0);
 		
-		vertices[vertIndex] = 2;
-		vertices[vertIndex+1] = 2;
-		vertIndex+=3;
-		vertices[vertIndex] = -2;
-		vertices[vertIndex+1] = -2;
-		vertIndex+=3;
-		vertices[vertIndex] = -2;
-		vertices[vertIndex+1] = 2;
-		vertIndex+=3;
-		vertices[vertIndex] = 2;
-		vertices[vertIndex+1] = -2;
-		vertIndex+=3;
+		// Mesh boundaries
+		vertices.push(0,0,0);
+		vertices.push(canvas.width,0,0);
+		vertices.push(0,canvas.height,0);
+		vertices.push(canvas.width,canvas.height,0);
 		
+		// CORNERS AND FIRST POINT SET UP. NEXT SECTION TURNS IMAGE EDGE INTO MESH EDGE.
+		
+		
+		let currPX = piX; // Stores current pixel coordinates for comparison. It may be useful to know piX and piY later.
+		let currPY = piY;
+		let meshDone = false; // Break variable for edgemaking loop
+		let resolution = 10; // Determines the density of vertices, 1 vertex for every 'resolution' verts (higher # is lower res)
+		let circleSamples = resolution*resolution; // So we don't need to do this a lot, could be lower?
+		
+		while(true){ // Edge creation loop
+			
+			// Check all pixels 'resolution' distance away from current vert for edges clockwise.
+			// Could use a smaller number than resolution^2? Maybe res*log(res)?
+			for(let i = 0; i < circleSamples; i++){
+				// (sampleX+currPX,sampleY+currPY) is the coordinates for the current sampled pixel
+				let sampleX = Math.floor(Math.cos((2*Math.PI*i)/circleSamples)*resolution);
+				let sampleY = Math.floor(Math.sin((2*Math.PI*i)/circleSamples)*resolution);
+				
+				//console.log(sampleX+currPX);
+				//console.log(sampleY+currPY);
+				
+				// If sampled pixel has a red value of 255 (therefore is white/an edge), make it the new current vertex
+				if(data[4*((sampleX+currPX)+(canvas.width*(sampleY+currPY)))] >= 100){
+					
+					console.log(data[4*((sampleX+currPX)+(canvas.width*(sampleY+currPY)))]);
+					
+					currPX = sampleX + currPX;
+					currPY = sampleY + currPY;
+					
+					break;
+					
+				}
+			}
+			
+			let iter = 0;
+			
+			// If current vert is within 'resolution-1' px of another vert, end edge creation
+			while(typeof(vertices[iter]) !== 'undefined'){ 
+				if(Math.pow(vertices[iter]-currPX,2)+Math.pow(vertices[iter+1]-currPY,2) <= Math.pow(resolution-1,2)){
+					meshDone = true;
+					break;
+				}
+				iter+=3;
+			}
+			
+			if(meshDone){
+				console.log("done");
+				break;
+			}
+			
+			// Create new vertex
+			
+			vertices.push(currPX,currPY,0);
+			//console.log("new vert");
+		
+		}
+		
+		
+		
+		
+		////////////////
+		
+		// Converting vert data from pixels to a 2xN coordinate space.
+		for(let i = 0; typeof(vertices[i]) !== 'undefined'; i+=3){
+			vertices[i] = (4*vertices[i]/canvas.width)-2;
+			vertices[i+1] = -1*((4*vertices[i+1]/canvas.width)-2);
+		}
 		
 		//ctx.putImageData(imageData, 0, 0); // Updates image, unnecessary
 		var geometry = new THREE.BufferGeometry(); // Making the mesh
