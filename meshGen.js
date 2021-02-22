@@ -2,7 +2,7 @@
 
 var img = new Image();
 img.crossOrigin = 'anonymous';
-img.src = 'tetromino.jpg';
+img.src = 'person.jpg';
 
 var canvas = document.getElementById('myCanvas');
 var ctx = canvas.getContext('2d');
@@ -88,7 +88,7 @@ window.addEventListener('load', function(ev) {
 		let currPX = piX; // Stores current pixel coordinates for comparison. It may be useful to know piX and piY later.
 		let currPY = piY;
 		let meshDone = false; // Break variable for edgemaking loop
-		let resolution = 10; // Determines the density of vertices, 1 vertex for every 'resolution' verts (higher # is lower res)
+		let resolution = 6; // Determines the density of vertices, 1 vertex for every 'resolution' verts (higher # is lower res)
 		let circleSamples = resolution*resolution; // So we don't need to do this a lot, could be lower?
 		let lastAngle = 0; // Hold on to angle so check starts from last angle, not from top.
 		
