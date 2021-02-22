@@ -1,6 +1,8 @@
+//import {OrbitControls} from 'three.js-master/OrbitControls.js';
+
 var img = new Image();
 img.crossOrigin = 'anonymous';
-img.src = 'circle.jpg';
+img.src = 'tetromino.jpg';
 
 var canvas = document.getElementById('myCanvas');
 var ctx = canvas.getContext('2d');
@@ -42,6 +44,9 @@ camera.position.z = 3;
 
 const light = new THREE.AmbientLight( 0x909090 ); // soft white light
 scene.add( light );
+
+//const controls = new OrbitControls( camera, renderer.domElement );
+//controls.update();
 
 window.addEventListener('load', function(ev) {
 	function meshGen(){
@@ -92,14 +97,10 @@ window.addEventListener('load', function(ev) {
 			// Check all pixels 'resolution' distance away from current vert for edges clockwise.
 			// Could use a smaller number than resolution^2? Maybe res*log(res)?
 			// Edge data must be thicker than 1px, if it's 1px then it might miss checks on tight pixel diagonals
-			for(let i = 0; i < circleSamples; i++){
+			for(let i = 0; i < circleSamples/2; i++){
 				// (sampleX+currPX,sampleY+currPY) is the coordinates for the current sampled pixel
-				let sampleX = Math.floor(Math.cos((2*Math.PI*(i+lastAngle))/circleSamples)*resolution);
-				let sampleY = Math.floor(Math.sin((2*Math.PI*(i+lastAngle))/circleSamples)*resolution);
-				
-				
-				//console.log(sampleX+currPX);
-				//console.log(sampleY+currPY);
+				let sampleX = Math.floor(Math.cos((2*Math.PI*(lastAngle+i))/circleSamples)*resolution);
+				let sampleY = Math.floor(Math.sin((2*Math.PI*(lastAngle+i))/circleSamples)*resolution);
 				
 				// If sampled pixel has a red value of 255 (therefore is white/an edge), make it the new current vertex
 				if(data[4*((sampleX+currPX)+(canvas.width*(sampleY+currPY)))] >= 100){
@@ -110,11 +111,31 @@ window.addEventListener('load', function(ev) {
 					currPY = sampleY + currPY;
 					
 					lastAngle = lastAngle+i;
-					console.log(lastAngle);
+					//console.log(lastAngle);
 					
 					break;
 					
 				}
+				
+				// Counterclockwise check, trying to find the closest in both directions
+				
+				sampleX = Math.floor(Math.cos((2*Math.PI*(lastAngle-i))/circleSamples)*resolution);
+				sampleY = Math.floor(Math.sin((2*Math.PI*(lastAngle-i))/circleSamples)*resolution);
+				
+				if(data[4*((sampleX+currPX)+(canvas.width*(sampleY+currPY)))] >= 100){
+					
+					//console.log(data[4*((sampleX+currPX)+(canvas.width*(sampleY+currPY)))]);
+					
+					currPX = sampleX + currPX;
+					currPY = sampleY + currPY;
+					
+					lastAngle = lastAngle-i;
+					//console.log(lastAngle);
+					
+					break;
+					
+				}
+				
 			}
 			
 			let iter = 0;
@@ -128,15 +149,16 @@ window.addEventListener('load', function(ev) {
 				iter+=3;
 			}
 			
+			// Create new vertex
+			
+			vertices.push(currPX,currPY,0);
+			
 			if(meshDone){
 				console.log("done");
 				break;
 			}
 			
-			// Create new vertex
 			
-			vertices.push(currPX,currPY,0);
-			//console.log("new vert");
 		
 		}
 		
@@ -154,7 +176,7 @@ window.addEventListener('load', function(ev) {
 		//ctx.putImageData(imageData, 0, 0); // Updates image, unnecessary
 		var geometry = new THREE.BufferGeometry(); // Making the mesh
 		geometry.setAttribute( 'position', new THREE.Float32BufferAttribute(vertices, 3));
-		var material = new THREE.PointsMaterial( { color: 0xef983e, size: .1 } );
+		var material = new THREE.PointsMaterial( { color: 0xef983e, size: .03 } );
 		
 		var points = new THREE.Points(geometry, material); // Adding the mesh
 		scene.add(points);
