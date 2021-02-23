@@ -1,8 +1,25 @@
 //import {OrbitControls} from 'three.js-master/OrbitControls.js';
 
+class lineSegment{
+	constructor(x1,y1,x2,y2){
+		this.x1 = x1; // Coordinates for both end points
+		this.x2 = x2;
+		this.y1 = y1;
+		this.y2 = y2;
+	}
+}
+
+class ray{
+	constructor(x1,y1,dir){
+		this.x1 = x1; // Coordinates for start point
+		this.x2 = x2;
+		this.dir = dir; // dir is direction in radians. 0 is to the right ofc
+	}
+}
+
 var img = new Image();
 img.crossOrigin = 'anonymous';
-img.src = 'person.jpg';
+img.src = 'Tetromino.jpg';
 
 var canvas = document.getElementById('myCanvas');
 var ctx = canvas.getContext('2d');
@@ -84,7 +101,6 @@ window.addEventListener('load', function(ev) {
 		
 		// CORNERS AND FIRST POINT SET UP. NEXT SECTION TURNS IMAGE EDGE INTO MESH EDGE.
 		
-		
 		let currPX = piX; // Stores current pixel coordinates for comparison. It may be useful to know piX and piY later.
 		let currPY = piY;
 		let meshDone = false; // Break variable for edgemaking loop
@@ -162,6 +178,9 @@ window.addEventListener('load', function(ev) {
 		
 		}
 		
+		////////////////
+		
+		// NEXT, IMPLEMENT RAYCAST CHECKING FOR INNER VERTICES
 		
 		
 		
