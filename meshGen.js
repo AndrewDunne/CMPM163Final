@@ -23,7 +23,7 @@ function intersectCheck(seg,point){ // Checks if 2 line segments intersect each 
 	let y4 = point.y + canvas.height;
 	let t = (((seg.x1-point.x)*(point.y-y4))-((seg.y1-point.y)*(point.x-x4)))/(((seg.x1-seg.x2)*(point.y-y4))-((seg.y1-seg.y2)*(point.x-x4)));
 	
-	if(0 <= t && t < 1){
+	if(0 < t && t < 1){
 		return true;
 	}
 	return false;
@@ -90,7 +90,7 @@ window.addEventListener('load', function(ev) {
 		while (piY * canvas.width < data.length) { // While not at end of data
 			let imageIndex = (piX+(canvas.width*piY))*4; // Easier parsing of RGB, stores image data index
 			if(data[imageIndex]+data[imageIndex+1]+data[imageIndex+2] == 765){ //if white
-				console.log(piX + " " + piY);
+				console.log("Coords of first point: " + piX + " " + piY);
 				break;
 			}
 			piX++;
@@ -120,7 +120,7 @@ window.addEventListener('load', function(ev) {
 		let resolution = 12; // Determines the density of vertices, 1 vertex for every 'resolution' verts (higher # is lower res)
 		let circleSamples = resolution*resolution; // So we don't need to do this a lot, could be lower?
 		let lastAngle = 0; // Hold on to angle so check starts from last angle, not from top.
-		let xMax,yMax; // Store the min and max coordinate values for vertices to save time in the interior mesh gen, only need to check coords inside these values.
+		let xMax = 0,yMax = 0; // Store the min and max coordinate values for vertices to save time in the interior mesh gen, only need to check coords inside these values.
 		let xMin = canvas.width;
 		let yMin = canvas.height;
 		
@@ -137,13 +137,10 @@ window.addEventListener('load', function(ev) {
 				// If sampled pixel has a red value of 255 (therefore is white/an edge), make it the new current vertex
 				if(data[4*((sampleX+currPX)+(canvas.width*(sampleY+currPY)))] >= 100){
 					
-					//console.log(data[4*((sampleX+currPX)+(canvas.width*(sampleY+currPY)))]);
-					
 					currPX = sampleX + currPX;
 					currPY = sampleY + currPY;
 					
 					lastAngle = lastAngle+i;
-					//console.log(lastAngle);
 					
 					break;
 					
@@ -156,13 +153,10 @@ window.addEventListener('load', function(ev) {
 				
 				if(data[4*((sampleX+currPX)+(canvas.width*(sampleY+currPY)))] >= 100){
 					
-					//console.log(data[4*((sampleX+currPX)+(canvas.width*(sampleY+currPY)))]);
-					
 					currPX = sampleX + currPX;
 					currPY = sampleY + currPY;
 					
 					lastAngle = lastAngle-i;
-					//console.log(lastAngle);
 					
 					break;
 					
@@ -186,14 +180,14 @@ window.addEventListener('load', function(ev) {
 			if(currPX > xMax){xMax = currPX} // Update mins and maxes
 			if(currPX < xMin){xMin = currPX}
 			if(currPY > yMax){yMax = currPY}
-			if(currPY > yMin){yMin = currPY}
+			if(currPY < yMin){yMin = currPY}
 			
 			vertices.push(currPX,currPY,0);
 			
 			// If we hit the end, break
 			
 			if(meshDone){
-				console.log("done");
+				console.log("Edge mesh done");
 				break;
 			}
 			
@@ -219,17 +213,27 @@ window.addEventListener('load', function(ev) {
 		
 		// Loop through possible inside values (values between maxes and mins), and check each with every line segment.
 		// If it hits an even number of line segs total, it's outside. Otherwise, inside.
-		for(let i = xMin; i < xMax; i+=resolution){
-			for(let j = yMin; j < yMax; j+=resolution){
+		console.log(xMin + " " + xMax + " " + yMin + " " + yMax);
+		for(let i = xMin+resolution; i < xMax; i+=resolution){
+			for(let j = yMin+resolution; j < yMax; j+=resolution){
 				let numIntersections = 0;
-				for(
+				for(let s = 0; s < edges.length; s++){
+					let p = new point(i,j);
+					if(intersectCheck(edges[s],p)){
+						numIntersections++;
+					}
+				}
+				console.log(numIntersections);
+				if(numIntersections % 2 == 1){
+					vertices.push(i,j,0);
+				}
 			}
 		}
 		
 		////////////////
 		
 		// Converting vert data from pixels to a 2xN coordinate space.
-		for(let i = 0; typeof(vertices[i]) !== 'undefined'; i+=3){
+		for(let i = 0; i < vertices.length; i+=3){
 			vertices[i] = (4*vertices[i]/canvas.width)-2;
 			vertices[i+1] = -1*((4*vertices[i+1]/canvas.width)-2);
 		}
@@ -245,6 +249,10 @@ window.addEventListener('load', function(ev) {
 		
 		
 	}
+
+let seg = new lineSegment(200.5,400,201,400);
+let p = new point(200,300);
+console.log(intersectCheck(seg,p));
 
 var button = document.querySelector('button');
 button.addEventListener('click', meshGen, false);
