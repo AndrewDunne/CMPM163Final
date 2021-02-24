@@ -9,12 +9,25 @@ class lineSegment{
 	}
 }
 
-class ray{
-	constructor(x1,y1,dir){
-		this.x1 = x1; // Coordinates for start point
-		this.x2 = x2;
-		this.dir = dir; // dir is direction in radians. 0 is to the right ofc
+class point{
+	constructor(x,y){
+		this.x = x; // Coordinates for start point
+		this.y = y;
+		//this.dir = dir; // dir is direction in radians. 0 is to the right ofc
 	}
+}
+
+function intersectCheck(seg,point){ // Checks if 2 line segments intersect each other for raycasts
+	// Source: Wikipedia, line-line intersection
+	let x4 = point.x+1;
+	let y4 = point.y + canvas.height;
+	let t = (((seg.x1-point.x)*(point.y-y4))-((seg.y1-point.y)*(point.x-x4)))/(((seg.x1-seg.x2)*(point.y-y4))-((seg.y1-seg.y2)*(point.x-x4)));
+	
+	if(0 <= t && t < 1){
+		return true;
+	}
+	return false;
+	
 }
 
 var img = new Image();
@@ -104,9 +117,12 @@ window.addEventListener('load', function(ev) {
 		let currPX = piX; // Stores current pixel coordinates for comparison. It may be useful to know piX and piY later.
 		let currPY = piY;
 		let meshDone = false; // Break variable for edgemaking loop
-		let resolution = 6; // Determines the density of vertices, 1 vertex for every 'resolution' verts (higher # is lower res)
+		let resolution = 12; // Determines the density of vertices, 1 vertex for every 'resolution' verts (higher # is lower res)
 		let circleSamples = resolution*resolution; // So we don't need to do this a lot, could be lower?
 		let lastAngle = 0; // Hold on to angle so check starts from last angle, not from top.
+		let xMax,yMax; // Store the min and max coordinate values for vertices to save time in the interior mesh gen, only need to check coords inside these values.
+		let xMin = canvas.width;
+		let yMin = canvas.height;
 		
 		while(true){ // Edge creation loop
 			
@@ -167,7 +183,14 @@ window.addEventListener('load', function(ev) {
 			
 			// Create new vertex
 			
+			if(currPX > xMax){xMax = currPX} // Update mins and maxes
+			if(currPX < xMin){xMin = currPX}
+			if(currPY > yMax){yMax = currPY}
+			if(currPY > yMin){yMin = currPY}
+			
 			vertices.push(currPX,currPY,0);
+			
+			// If we hit the end, break
 			
 			if(meshDone){
 				console.log("done");
@@ -182,7 +205,26 @@ window.addEventListener('load', function(ev) {
 		
 		// NEXT, IMPLEMENT RAYCAST CHECKING FOR INNER VERTICES
 		
+		let edges = []; // Create loop of line segment objects from edges
 		
+		for(let i = 15; i < vertices.length; i+=3){
+			
+			let seg = new lineSegment(vertices[i-3],vertices[i-2],vertices[i],vertices[i+1]);
+			edges.push(seg);
+			
+		}
+		
+		let seg = new lineSegment(vertices[12],vertices[13],vertices[vertices.length-3],vertices[vertices.length-2]);
+		edges.push(seg); // Line segment from first to last too
+		
+		// Loop through possible inside values (values between maxes and mins), and check each with every line segment.
+		// If it hits an even number of line segs total, it's outside. Otherwise, inside.
+		for(let i = xMin; i < xMax; i+=resolution){
+			for(let j = yMin; j < yMax; j+=resolution){
+				let numIntersections = 0;
+				for(
+			}
+		}
 		
 		////////////////
 		
