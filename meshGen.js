@@ -22,8 +22,9 @@ function intersectCheck(seg,point){ // Checks if 2 line segments intersect each 
 	let x4 = point.x+1;
 	let y4 = point.y + canvas.height;
 	let t = (((seg.x1-point.x)*(point.y-y4))-((seg.y1-point.y)*(point.x-x4)))/(((seg.x1-seg.x2)*(point.y-y4))-((seg.y1-seg.y2)*(point.x-x4)));
+	let u = (((seg.x2-seg.x1)*(seg.y1-point.y))-((seg.y2-seg.y1)*(seg.x1-point.x)))/(((seg.x1-seg.x2)*(point.y-y4))-((seg.y1-seg.y2)*(point.x-x4)));
 	
-	if(0 < t && t < 1){
+	if(0 < t && t < 1 && 0 < u && u < 1){
 		return true;
 	}
 	return false;
@@ -117,7 +118,7 @@ window.addEventListener('load', function(ev) {
 		let currPX = piX; // Stores current pixel coordinates for comparison. It may be useful to know piX and piY later.
 		let currPY = piY;
 		let meshDone = false; // Break variable for edgemaking loop
-		let resolution = 12; // Determines the density of vertices, 1 vertex for every 'resolution' verts (higher # is lower res)
+		let resolution = 8; // Determines the density of vertices, 1 vertex for every 'resolution' verts (higher # is lower res)
 		let circleSamples = resolution*resolution; // So we don't need to do this a lot, could be lower?
 		let lastAngle = 0; // Hold on to angle so check starts from last angle, not from top.
 		let xMax = 0,yMax = 0; // Store the min and max coordinate values for vertices to save time in the interior mesh gen, only need to check coords inside these values.
@@ -223,7 +224,7 @@ window.addEventListener('load', function(ev) {
 						numIntersections++;
 					}
 				}
-				console.log(numIntersections);
+				//console.log(numIntersections);
 				if(numIntersections % 2 == 1){
 					vertices.push(i,j,0);
 				}
@@ -231,6 +232,12 @@ window.addEventListener('load', function(ev) {
 		}
 		
 		////////////////
+		
+		// NEXT, CREATE FACE INDICES
+		
+		
+		
+		///////
 		
 		// Converting vert data from pixels to a 2xN coordinate space.
 		for(let i = 0; i < vertices.length; i+=3){
@@ -250,7 +257,7 @@ window.addEventListener('load', function(ev) {
 		
 	}
 
-let seg = new lineSegment(200.5,400,201,400);
+let seg = new lineSegment(100,400,100,0);
 let p = new point(200,300);
 console.log(intersectCheck(seg,p));
 
