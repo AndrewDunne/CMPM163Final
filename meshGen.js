@@ -47,7 +47,7 @@ var camera = new THREE.PerspectiveCamera(100, window.innerWidth/window.innerHeig
 var renderer = new THREE.WebGLRenderer();
 renderer.setSize(400, 400);
 document.body.appendChild(renderer.domElement);
-camera.position.z = 3;
+camera.position.z = 1;
 
 /*window.addEventListener('load', function(ev) {
 	function invert(){
@@ -108,10 +108,10 @@ window.addEventListener('load', function(ev) {
 		vertices.push(piX,piY,0);
 		
 		// Mesh boundaries
-		vertices.push(0,0,0);
+		/*vertices.push(0,0,0);
 		vertices.push(canvas.width,0,0);
 		vertices.push(0,canvas.height,0);
-		vertices.push(canvas.width,canvas.height,0);
+		vertices.push(canvas.width,canvas.height,0);*/
 		
 		// CORNERS AND FIRST POINT SET UP. NEXT SECTION TURNS IMAGE EDGE INTO MESH EDGE.
 		
@@ -202,14 +202,14 @@ window.addEventListener('load', function(ev) {
 		
 		let edges = []; // Create loop of line segment objects from edges
 		
-		for(let i = 15; i < vertices.length; i+=3){
+		for(let i = 3; i < vertices.length; i+=3){
 			
 			let seg = new lineSegment(vertices[i-3],vertices[i-2],vertices[i],vertices[i+1]);
 			edges.push(seg);
 			
 		}
 		
-		let seg = new lineSegment(vertices[12],vertices[13],vertices[vertices.length-3],vertices[vertices.length-2]);
+		let seg = new lineSegment(vertices[0],vertices[1],vertices[vertices.length-3],vertices[vertices.length-2]);
 		edges.push(seg); // Line segment from first to last too
 		
 		// Loop through possible inside values (values between maxes and mins), and check each with every line segment.
@@ -231,13 +231,42 @@ window.addEventListener('load', function(ev) {
 			}
 		}
 		
+		//console.log(vertices.length/3);
+		
 		////////////////
 		
 		// NEXT, CREATE FACE INDICES
 		
-		
+		let indices = [];
+		for(let i = 0; i < vertices.length; i+=3){
+			let closeVerts = []; // list of verts within resolution of current vertex
+			for(let j = 0; j < vertices.length; j+= 3){
+				let dist = Math.floor(Math.sqrt(Math.pow(vertices[i]-vertices[j],2) + Math.pow(vertices[i+1]-vertices[j+1],2)))-1; // Distance between verts
+				if(i != j && dist <= resolution){
+					//console.log(j/3);
+					closeVerts.push(j/3);
+				}
+			}
+			//console.log(closeVerts);
+			for(let j = 0; j < closeVerts.length; j++){
+				for(let k = 0; k < closeVerts.length; k++){
+					let dist = Math.floor(Math.sqrt(Math.pow(vertices[closeVerts[j]]-vertices[closeVerts[k]],2) + Math.pow(vertices[closeVerts[j]+1]-vertices[closeVerts[k]+1],2)))-1;
+					// If 2 verts already close to current vert are also close to each other, then push a face made with the 3 of them to indices.
+					if(j != k && dist <= resolution && !(i/3 > closeVerts[j] && i/3 > closeVerts[k])){ // Prevent duplicate faces by not making faces w/ already checked values.
+						//console.log(vertices[closeVerts[j+1]]);
+						//console.log(vertices[closeVerts[k+1]]);
+						indices.push(i/3,closeVerts[j],closeVerts[k]); // How to prevent same face from being added multiple times?
+					}
+				}
+			}
+		}
 		
 		///////
+		
+		for(let i = 0; i < indices.length; i+=3){
+			console.log("Face: " + indices[i] + " " + indices[i+1] + " " + indices[i+2]);
+		}
+		console.log(indices.length/3);
 		
 		// Converting vert data from pixels to a 2xN coordinate space.
 		for(let i = 0; i < vertices.length; i+=3){
@@ -247,11 +276,16 @@ window.addEventListener('load', function(ev) {
 		
 		//ctx.putImageData(imageData, 0, 0); // Updates image, unnecessary
 		var geometry = new THREE.BufferGeometry(); // Making the mesh
+		geometry.setIndex( indices );
 		geometry.setAttribute( 'position', new THREE.Float32BufferAttribute(vertices, 3));
-		var material = new THREE.PointsMaterial( { color: 0xef983e, size: .03 } );
+		//var material = new THREE.PointsMaterial( { color: 0xef983e, size: .03 } );
+		var material = new THREE.MeshBasicMaterial({wireframe:true});
 		
-		var points = new THREE.Points(geometry, material); // Adding the mesh
-		scene.add(points);
+		/*var points = new THREE.Points(geometry, material); // Adding the mesh
+		scene.add(points);*/
+		
+		var mesh = new THREE.Mesh(geometry,material);
+		scene.add(mesh);
 		
 		
 		
