@@ -106,12 +106,13 @@ function init() {
 
 	geometry.setIndex( indices );
 	geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
+	geometry.computeVertexNormals();
 	//geometry.setAttribute( 'normal', new THREE.Float32BufferAttribute( normals, 3 ) );
 	//geometry.setAttribute( 'color', new THREE.Float32BufferAttribute( colors, 3 ) );
 
-	const material = new THREE.MeshBasicMaterial( {
+	const material = new THREE.MeshPhongMaterial( {
 		side: THREE.DoubleSide,
-		wireframe: true,
+		//wireframe: true,
 		//vertexColors: true
 	} );
 

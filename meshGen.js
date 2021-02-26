@@ -1,4 +1,4 @@
-//import {OrbitControls} from 'three.js-master/OrbitControls.js';
+import { OrbitControls } from './three.js-master/OrbitControls.js'
 
 class lineSegment{
 	constructor(x1,y1,x2,y2){
@@ -33,7 +33,7 @@ function intersectCheck(seg,point){ // Checks if 2 line segments intersect each 
 
 var img = new Image();
 img.crossOrigin = 'anonymous';
-img.src = 'Tetromino.jpg';
+img.src = 'Circle.jpg';
 
 var canvas = document.getElementById('myCanvas');
 var ctx = canvas.getContext('2d');
@@ -47,7 +47,10 @@ var camera = new THREE.PerspectiveCamera(100, window.innerWidth/window.innerHeig
 var renderer = new THREE.WebGLRenderer();
 renderer.setSize(400, 400);
 document.body.appendChild(renderer.domElement);
-camera.position.z = 1;
+camera.position.z = 2;
+
+const controls = new OrbitControls(camera, renderer.domElement);
+//camera.rotateY(Math.PI);
 
 /*window.addEventListener('load', function(ev) {
 	function invert(){
@@ -67,14 +70,20 @@ camera.position.z = 1;
 	var button = document.querySelector('button');
 		button.addEventListener('click', invert, false);
 },false);*/
+/*
+var cubeGeo = new THREE.BoxGeometry(1,1,2);
+var cubeMat = new THREE.MeshPhongMaterial( { color: 0xdddddd, specular: 0x00ff00, shininess: 30 });
+var cube = new THREE.Mesh(cubeGeo,cubeMat);
+cube.rotateX(Math.PI/4);
+scene.add(cube);*/
 
-/*var cubeGeo = new THREE.BoxGeometry(1,1,2);
-		var cubeMat = new THREE.MeshPhongMaterial( { color: 0xdddddd, specular: 0x00ff00, shininess: 30 });
-		var cube = new THREE.Mesh(cubeGeo,cubeMat);
-		scene.add(cube);*/
+var material = new THREE.MeshPhongMaterial({color: 0xff00ff});
 
 const light = new THREE.AmbientLight( 0x909090 ); // soft white light
+const lightPoint = new THREE.PointLight( 0xf0f0f0,2,3,2 );
+lightPoint.position.set(0,0,2);
 scene.add( light );
+scene.add(lightPoint);
 
 //const controls = new OrbitControls( camera, renderer.domElement );
 //controls.update();
@@ -241,8 +250,8 @@ window.addEventListener('load', function(ev) {
 		for(let i = 0; i < vertices.length; i+=3){
 			let closeVerts = []; // list of verts within resolution of current vertex
 			for(let j = 0; j < vertices.length; j+= 3){
-				let dist = Math.floor(Math.sqrt(Math.pow(vertices[i]-vertices[j],2) + Math.pow(vertices[i+1]-vertices[j+1],2)))-1; // Distance between verts
-				if(i != j && dist <= resolution){
+				let dist = Math.sqrt(Math.pow(vertices[i]-vertices[j],2) + Math.pow(vertices[i+1]-vertices[j+1],2)); // Distance between verts
+				if(i != j && dist <= resolution*1.33){ // Adjust this value and make it so there aren't overlapping faces
 					//console.log(j/3);
 					closeVerts.push(j/3);
 				}
@@ -250,12 +259,12 @@ window.addEventListener('load', function(ev) {
 			//console.log(closeVerts);
 			for(let j = 0; j < closeVerts.length; j++){
 				for(let k = 0; k < closeVerts.length; k++){
-					let dist = Math.floor(Math.sqrt(Math.pow(vertices[closeVerts[j]]-vertices[closeVerts[k]],2) + Math.pow(vertices[closeVerts[j]+1]-vertices[closeVerts[k]+1],2)))-1;
+					let dist = Math.sqrt(Math.pow(vertices[closeVerts[j]]-vertices[closeVerts[k]],2) + Math.pow(vertices[closeVerts[j]+1]-vertices[closeVerts[k]+1],2));
 					// If 2 verts already close to current vert are also close to each other, then push a face made with the 3 of them to indices.
-					if(j != k && dist <= resolution && !(i/3 > closeVerts[j] && i/3 > closeVerts[k])){ // Prevent duplicate faces by not making faces w/ already checked values.
+					if(j != k /*&& (i/3 < closeVerts[j] && i/3 < closeVerts[k] && closeVerts[j] < closeVerts[k])*/){ // Prevent duplicate faces by not making faces w/ already checked values.
 						//console.log(vertices[closeVerts[j+1]]);
 						//console.log(vertices[closeVerts[k+1]]);
-						indices.push(i/3,closeVerts[j],closeVerts[k]); // How to prevent same face from being added multiple times?
+						indices.push(i/3,closeVerts[j],closeVerts[k]);
 					}
 				}
 			}
@@ -264,22 +273,23 @@ window.addEventListener('load', function(ev) {
 		///////
 		
 		for(let i = 0; i < indices.length; i+=3){
-			console.log("Face: " + indices[i] + " " + indices[i+1] + " " + indices[i+2]);
+			//console.log("Face: " + indices[i] + " " + indices[i+1] + " " + indices[i+2]);
 		}
 		console.log(indices.length/3);
 		
-		// Converting vert data from pixels to a 2xN coordinate space.
+		// Converting vert data from pixels to a 2xN coordinate space and displacing on z axis
 		for(let i = 0; i < vertices.length; i+=3){
 			vertices[i] = (4*vertices[i]/canvas.width)-2;
 			vertices[i+1] = -1*((4*vertices[i+1]/canvas.width)-2);
+			vertices[i+2] = (2-Math.sqrt(Math.pow(vertices[i],2)+Math.pow(vertices[i+1],2)))/5;
 		}
 		
 		//ctx.putImageData(imageData, 0, 0); // Updates image, unnecessary
 		var geometry = new THREE.BufferGeometry(); // Making the mesh
 		geometry.setIndex( indices );
 		geometry.setAttribute( 'position', new THREE.Float32BufferAttribute(vertices, 3));
+		geometry.computeVertexNormals();
 		//var material = new THREE.PointsMaterial( { color: 0xef983e, size: .03 } );
-		var material = new THREE.MeshBasicMaterial({wireframe:true});
 		
 		/*var points = new THREE.Points(geometry, material); // Adding the mesh
 		scene.add(points);*/
