@@ -92,14 +92,28 @@ function init() {
 	indices.push(0,2,22);
 	indices.push(0,37,10);*/
 	
-	for(let i = 0; i < 24; i++){
+	/*for(let i = 0; i < 24; i++){
 		
 		vertices.push(Math.sin((Math.PI*i)/12)*5,Math.sin(((Math.PI*i)/12)+(Math.PI / 2))*5,0);
 		//normals.push( 0, 0, 1 );
+	}*/
+	
+	for(let i = -2; i < 3; i++){
+		for(let j = -2; j < 3; j++){
+			vertices.push(i,j,Math.pow(i+j,2)/4);
+		}
+		
 	}
 
-	for(let i = 1; i < 23; i++){
-		indices.push(0,i,i+1);
+	for(let i = 0; i < (vertices.length/3); i++){
+		
+		
+		
+		indices.push(i,i-1,i+5);
+		indices.push(i,i-1,i-5);
+		indices.push(i,i+1,i-5);
+		indices.push(i,i+1,i+5);
+		
 	}
 
 	//

@@ -17,6 +17,13 @@ class point{
 	}
 }
 
+class vertAngle{
+	constructor(index,angle){
+		this.index = index; //Index in vert array
+		this.angle = angle // Angle in radians
+	}
+}
+
 function intersectCheck(seg,point){ // Checks if 2 line segments intersect each other for raycasts
 	// Source: Wikipedia, line-line intersection
 	let x4 = point.x+1;
@@ -33,7 +40,7 @@ function intersectCheck(seg,point){ // Checks if 2 line segments intersect each 
 
 var img = new Image();
 img.crossOrigin = 'anonymous';
-img.src = 'Circle.jpg';
+img.src = 'pokeball.jpg';
 
 var canvas = document.getElementById('myCanvas');
 var ctx = canvas.getContext('2d');
@@ -43,11 +50,11 @@ img.onload = function() {
 };
 
 var scene = new THREE.Scene();
-var camera = new THREE.PerspectiveCamera(100, window.innerWidth/window.innerHeight, 0.1, 1000);
+var camera = new THREE.PerspectiveCamera(20, window.innerWidth/window.innerHeight, 0.1, 1000);
 var renderer = new THREE.WebGLRenderer();
 renderer.setSize(400, 400);
 document.body.appendChild(renderer.domElement);
-camera.position.z = 2;
+camera.position.z = 8;
 
 const controls = new OrbitControls(camera, renderer.domElement);
 //camera.rotateY(Math.PI);
@@ -77,11 +84,13 @@ var cube = new THREE.Mesh(cubeGeo,cubeMat);
 cube.rotateX(Math.PI/4);
 scene.add(cube);*/
 
-var material = new THREE.MeshPhongMaterial({color: 0xff00ff});
+var material = new THREE.MeshStandardMaterial({color: 0xffb0ff, metalness: .0, roughness: .3});
 
-const light = new THREE.AmbientLight( 0x909090 ); // soft white light
-const lightPoint = new THREE.PointLight( 0xf0f0f0,2,3,2 );
+const light = new THREE.AmbientLight( 0x707070 ); // soft white light
+const lightPoint = new THREE.PointLight( 0xf0f0f0,2,6,2 );
+const lightPoint2 = new THREE.PointLight( 0xf0f0f0,2,3,2 );
 lightPoint.position.set(0,0,2);
+lightPoint.position.set(1,0,1);
 scene.add( light );
 scene.add(lightPoint);
 
@@ -127,14 +136,16 @@ window.addEventListener('load', function(ev) {
 		let currPX = piX; // Stores current pixel coordinates for comparison. It may be useful to know piX and piY later.
 		let currPY = piY;
 		let meshDone = false; // Break variable for edgemaking loop
-		let resolution = 8; // Determines the density of vertices, 1 vertex for every 'resolution' verts (higher # is lower res)
+		let resolution = 3; // Determines the density of vertices, 1 vertex for every 'resolution' verts (higher # is lower res)
 		let circleSamples = resolution*resolution; // So we don't need to do this a lot, could be lower?
 		let lastAngle = 0; // Hold on to angle so check starts from last angle, not from top.
 		let xMax = 0,yMax = 0; // Store the min and max coordinate values for vertices to save time in the interior mesh gen, only need to check coords inside these values.
 		let xMin = canvas.width;
 		let yMin = canvas.height;
 		
-		while(true){ // Edge creation loop
+		// EDGE CREATION LOOP
+		
+		while(true){ 
 			
 			// Check all pixels 'resolution' distance away from current vert for edges clockwise.
 			// Could use a smaller number than resolution^2? Maybe res*log(res)?
@@ -176,7 +187,7 @@ window.addEventListener('load', function(ev) {
 			
 			let iter = 0;
 			
-			// If current vert is within 'resolution-1' px of another vert, end edge creation
+			// If current vert is within 'resolution' px of another vert, end edge creation
 			while(typeof(vertices[iter]) !== 'undefined'){ 
 				if(Math.pow(vertices[iter]-currPX,2)+Math.pow(vertices[iter+1]-currPY,2) <= Math.pow(resolution-4,2)){
 					meshDone = true;
@@ -221,6 +232,8 @@ window.addEventListener('load', function(ev) {
 		let seg = new lineSegment(vertices[0],vertices[1],vertices[vertices.length-3],vertices[vertices.length-2]);
 		edges.push(seg); // Line segment from first to last too
 		
+		let centerVertices = []; // New array for center vertices only until we figure out how to do mesh good
+		
 		// Loop through possible inside values (values between maxes and mins), and check each with every line segment.
 		// If it hits an even number of line segs total, it's outside. Otherwise, inside.
 		console.log(xMin + " " + xMax + " " + yMin + " " + yMax);
@@ -233,66 +246,84 @@ window.addEventListener('load', function(ev) {
 						numIntersections++;
 					}
 				}
-				//console.log(numIntersections);
 				if(numIntersections % 2 == 1){
-					vertices.push(i,j,0);
+					centerVertices.push(i,j,0); // CENTERVERTICES
 				}
 			}
 		}
-		
-		//console.log(vertices.length/3);
 		
 		////////////////
 		
 		// NEXT, CREATE FACE INDICES
 		
 		let indices = [];
-		for(let i = 0; i < vertices.length; i+=3){
+		for(let i = 0; i < centerVertices.length; i+=3){ // Using numedgeverts for now to ignore the complicated edge geometry.
 			let closeVerts = []; // list of verts within resolution of current vertex
-			for(let j = 0; j < vertices.length; j+= 3){
-				let dist = Math.sqrt(Math.pow(vertices[i]-vertices[j],2) + Math.pow(vertices[i+1]-vertices[j+1],2)); // Distance between verts
-				if(i != j && dist <= resolution*1.33){ // Adjust this value and make it so there aren't overlapping faces
-					//console.log(j/3);
+			for(let j = 0; j < centerVertices.length; j+= 3){
+				let dist = Math.sqrt(Math.pow(centerVertices[i]-centerVertices[j],2) + Math.pow(centerVertices[i+1]-centerVertices[j+1],2)); // Distance between verts
+				if(i != j && dist <= resolution*1.33){ // Adjust this value and make it so there aren't overlapping faces. Also only push verts of higher index.
+					//let angle = Math.atan((centerVertices[j+1]-centerVertices[i+1])/(centerVertices[j]-centerVertices[i])); // Absolute angle of vertex in radians
+					//let vert = new vertAngle(j/3,angle);
 					closeVerts.push(j/3);
 				}
 			}
-			//console.log(closeVerts);
-			for(let j = 0; j < closeVerts.length; j++){
-				for(let k = 0; k < closeVerts.length; k++){
-					let dist = Math.sqrt(Math.pow(vertices[closeVerts[j]]-vertices[closeVerts[k]],2) + Math.pow(vertices[closeVerts[j]+1]-vertices[closeVerts[k]+1],2));
-					// If 2 verts already close to current vert are also close to each other, then push a face made with the 3 of them to indices.
-					if(j != k /*&& (i/3 < closeVerts[j] && i/3 < closeVerts[k] && closeVerts[j] < closeVerts[k])*/){ // Prevent duplicate faces by not making faces w/ already checked values.
-						//console.log(vertices[closeVerts[j+1]]);
-						//console.log(vertices[closeVerts[k+1]]);
-						indices.push(i/3,closeVerts[j],closeVerts[k]);
+			
+			// Sort closeVerts by angle
+			/*for(let m = 0; m < closeVerts.length-1;m++){
+				for(let n = 0; n < closeVerts.length-m-1; n++){
+					if(closeVerts[n].angle > closeVerts[n+1].angle){
+						let temp = closeVerts[n];
+						closeVerts[n] = closeVerts[n+1];
+						closeVerts[n+1] = temp;
 					}
+				}
+			}*/
+
+			// Push non-duplicate faces to indices[]
+			for(let j = 0; j < closeVerts.length; j++){
+				if(closeVerts[j] == (i/3)-1 && j != 0){ // push topleft faces
+					indices.push(i/3,closeVerts[j],closeVerts[j-1]);
+				}
+				if(closeVerts[j] == (i/3)+1 && j != closeVerts.length-1){ // push botright faces
+					indices.push(i/3,closeVerts[j],closeVerts[j+1]);
 				}
 			}
 		}
 		
 		///////
 		
-		for(let i = 0; i < indices.length; i+=3){
-			//console.log("Face: " + indices[i] + " " + indices[i+1] + " " + indices[i+2]);
-		}
-		console.log(indices.length/3);
+		/*for(let i = 0; i < indices.length; i+=3){
+			console.log("Face: " + indices[i] + " " + indices[i+1] + " " + indices[i+2]);
+		}*/
+		//console.log(indices.length/3);
 		
 		// Converting vert data from pixels to a 2xN coordinate space and displacing on z axis
-		for(let i = 0; i < vertices.length; i+=3){
-			vertices[i] = (4*vertices[i]/canvas.width)-2;
-			vertices[i+1] = -1*((4*vertices[i+1]/canvas.width)-2);
-			vertices[i+2] = (2-Math.sqrt(Math.pow(vertices[i],2)+Math.pow(vertices[i+1],2)))/5;
+		let maxHeight = 0;
+		for(let i = 0; i < centerVertices.length; i+=3){
+			centerVertices[i] = (4*centerVertices[i]/canvas.width)-2;
+			centerVertices[i+1] = -1*((4*centerVertices[i+1]/canvas.width)-2);
+			let minDist = 5;
+			for(let j = 0; j < vertices.length; j+= 3){ // Set z displacement based on distance to closest edge vert
+				let currDist = Math.pow(Math.pow((4*vertices[j]/canvas.width)-2-centerVertices[i],2)+Math.pow(-1*((4*vertices[j+1]/canvas.width)-2)-centerVertices[i+1],2),.25);
+				if(currDist < minDist){
+					minDist = currDist;
+					//console.log(currDist);
+				}
+			}
+			if(minDist > maxHeight){
+				maxHeight = minDist;
+			}
+			centerVertices[i+2] = minDist;
+		}
+		for(let i = 0; i < centerVertices.length; i+=3){ // Spherical falloff
+			centerVertices[i+2] = maxHeight-Math.pow(maxHeight-centerVertices[i+2],2);
 		}
 		
 		//ctx.putImageData(imageData, 0, 0); // Updates image, unnecessary
 		var geometry = new THREE.BufferGeometry(); // Making the mesh
 		geometry.setIndex( indices );
-		geometry.setAttribute( 'position', new THREE.Float32BufferAttribute(vertices, 3));
+		geometry.setAttribute( 'position', new THREE.Float32BufferAttribute(centerVertices, 3));
 		geometry.computeVertexNormals();
-		//var material = new THREE.PointsMaterial( { color: 0xef983e, size: .03 } );
-		
-		/*var points = new THREE.Points(geometry, material); // Adding the mesh
-		scene.add(points);*/
 		
 		var mesh = new THREE.Mesh(geometry,material);
 		scene.add(mesh);
@@ -311,9 +342,14 @@ button.addEventListener('click', meshGen, false);
 
 
 
-
+let fram = 0;
 
 function animate() {
+	
+	fram++;
+	
+	lightPoint.position.set(Math.sin(fram/30)*2,Math.sin((fram/30)+(Math.PI/2))*2,2);
+	
 		requestAnimationFrame(animate);
 		renderer.render(scene, camera);
 }
