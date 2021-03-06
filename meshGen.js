@@ -40,7 +40,7 @@ function intersectCheck(seg,point){ // Checks if 2 line segments intersect each 
 
 var img = new Image();
 img.crossOrigin = 'anonymous';
-img.src = 'pokeball.jpg';
+img.src = 'Tetromino.jpg';
 
 var canvas = document.createElement("CANVAS");
 var ctx;
@@ -50,7 +50,6 @@ var camera = new THREE.PerspectiveCamera(20, window.innerWidth/window.innerHeigh
 var renderer = new THREE.WebGLRenderer();
 document.body.appendChild(renderer.domElement);
 camera.position.z = 8;
-//camera.position.y = 8;
 
 img.onload = function() {
 	//console.log(this.width + 'x' + this.height);
@@ -64,32 +63,6 @@ img.onload = function() {
 //var canvas = document.getElementById('myCanvas');
 
 const controls = new OrbitControls(camera, renderer.domElement);
-//camera.rotateY(Math.PI);
-
-/*window.addEventListener('load', function(ev) {
-	function invert(){
-		const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-		const data = imageData.data;
-		for (var i = 0; i < data.length; i += 4) {
-			data[i]     = 255 - data[i];     // red
-			data[i + 1] = 255 - data[i + 1]; // green
-			data[i + 2] = 255 - data[i + 2]; // blue
-			if(data[i] >= 100 && data[i] <= 110){
-				console.log("red");
-			}
-		}
-		ctx.putImageData(imageData, 0, 0);
-	}
-
-	var button = document.querySelector('button');
-		button.addEventListener('click', invert, false);
-},false);*/
-/*
-var cubeGeo = new THREE.BoxGeometry(1,1,2);
-var cubeMat = new THREE.MeshPhongMaterial( { color: 0xdddddd, specular: 0x00ff00, shininess: 30 });
-var cube = new THREE.Mesh(cubeGeo,cubeMat);
-cube.rotateX(Math.PI/4);
-scene.add(cube);*/
 
 var material = new THREE.MeshStandardMaterial({color: 0xffb0ff, metalness: .0, roughness: .3});
 
@@ -128,7 +101,6 @@ window.addEventListener('load', function(ev) {
 			}
 			
 		}
-		
 		vertices.push(piX,piY,0);
 		
 		// TURN IMAGE EDGE INTO MESH EDGE.
@@ -136,7 +108,6 @@ window.addEventListener('load', function(ev) {
 		let currPX = piX; // Stores current pixel coordinates for comparison. It may be useful to know piX and piY later.
 		let currPY = piY;
 		let meshDone = false; // Break variable for edgemaking loop
-		let resolution = 2; // Determines the density of vertices, 1 vertex for every 'resolution' verts (higher # is lower res)
 		let circleSamples = resolution*resolution; // So we don't need to do this a lot, could be lower?
 		let lastAngle = 0; // Hold on to angle so check starts from last angle, not from top.
 		let xMax = 0,yMax = 0; // Store the min and max coordinate values for vertices to save time in the interior mesh gen, only need to check coords inside these values.
@@ -180,17 +151,16 @@ window.addEventListener('load', function(ev) {
 				}
 			}
 			
-			// If current vert is within 'resolution' px of another vert, end edge creation
+			// If current vert is within ciel('resolution'/4) px of another vert, end edge creation
 			let iter = 0;
 			while(typeof(vertices[iter]) !== 'undefined'){ 
-				if(Math.pow(vertices[iter]-currPX,2)+Math.pow(vertices[iter+1]-currPY,2) <= Math.pow(resolution-4,2)){
+				if(Math.pow(vertices[iter]-currPX,2)+Math.pow(vertices[iter+1]-currPY,2) <= Math.pow(Math.ceil(resolution/4),2)){
 					meshDone = true;
 					break;
 				}
 				iter+=3;
 			}
 			
-			// Create new vertex
 			if(currPX > xMax){xMax = currPX} // Update mins and maxes
 			if(currPX < xMin){xMin = currPX}
 			if(currPY > yMax){yMax = currPY}
@@ -201,10 +171,9 @@ window.addEventListener('load', function(ev) {
 			// If we hit the end, break
 			if(meshDone){
 				console.log("Edge mesh done");
+				console.log(currPX + " " + currPY);
 				break;
 			}
-			
-			
 		
 		}
 		
@@ -317,6 +286,17 @@ var button = document.querySelector('button');
 button.addEventListener('click', meshGen, false);
 },false);
 
+// SLIDER TO ACTIVELY CHANGE RESOLUTION
+
+var slider = document.getElementById("myRes");
+var output = document.getElementById("resVal");
+output.innerHTML = slider.value;
+var resolution = Number(slider.value);
+
+slider.oninput = function() {
+  output.innerHTML = this.value;
+  resolution = Number(this.value); // Determines the density of vertices, 1 vertex for every 'resolution' pixels (higher # is lower res)
+}
 
 
 let fram = 0;
