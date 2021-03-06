@@ -42,19 +42,26 @@ var img = new Image();
 img.crossOrigin = 'anonymous';
 img.src = 'pokeball.jpg';
 
-var canvas = document.getElementById('myCanvas');
-var ctx = canvas.getContext('2d');
-
-img.onload = function() {
-    ctx.drawImage(img, 0, 0);
-};
+var canvas = document.createElement("CANVAS");
+var ctx;
 
 var scene = new THREE.Scene();
 var camera = new THREE.PerspectiveCamera(20, window.innerWidth/window.innerHeight, 0.1, 1000);
 var renderer = new THREE.WebGLRenderer();
-renderer.setSize(400, 400);
 document.body.appendChild(renderer.domElement);
 camera.position.z = 8;
+//camera.position.y = 8;
+
+img.onload = function() {
+	//console.log(this.width + 'x' + this.height);
+	canvas.width = this.width;
+	canvas.height = this.height;
+	renderer.setSize(this.width, this.height);
+	ctx = canvas.getContext('2d');
+	ctx.drawImage(img, 0, 0);
+	document.body.appendChild(canvas);
+};
+//var canvas = document.getElementById('myCanvas');
 
 const controls = new OrbitControls(camera, renderer.domElement);
 //camera.rotateY(Math.PI);
@@ -106,10 +113,12 @@ window.addEventListener('load', function(ev) {
 		var piX = 0; // pixelIndexX stores the X index of the pixel we're on
 		var piY = 0; // Same but for y
 		
+		// FIND FIRST POINT AND ADD IT. 
+		
 		while (piY * canvas.width < data.length) { // While not at end of data
 			let imageIndex = (piX+(canvas.width*piY))*4; // Easier parsing of RGB, stores image data index
 			if(data[imageIndex]+data[imageIndex+1]+data[imageIndex+2] == 765){ //if white
-				console.log("Coords of first point: " + piX + " " + piY);
+				//console.log("Coords of first point: " + piX + " " + piY);
 				break;
 			}
 			piX++;
@@ -120,23 +129,14 @@ window.addEventListener('load', function(ev) {
 			
 		}
 		
-		//let vertX = 4*(piX/canvas.width) - 2; // Creates vertices in a 4xN area on Threejs canvas
-		//let vertY = -1*(4*(piY/canvas.width) - 2); // Using canvas.height would squash/stretch the mesh.
-		// Above is negative because on canvas positive y is down and in scene positive y is up.
 		vertices.push(piX,piY,0);
 		
-		// Mesh boundaries
-		/*vertices.push(0,0,0);
-		vertices.push(canvas.width,0,0);
-		vertices.push(0,canvas.height,0);
-		vertices.push(canvas.width,canvas.height,0);*/
-		
-		// CORNERS AND FIRST POINT SET UP. NEXT SECTION TURNS IMAGE EDGE INTO MESH EDGE.
+		// TURN IMAGE EDGE INTO MESH EDGE.
 		
 		let currPX = piX; // Stores current pixel coordinates for comparison. It may be useful to know piX and piY later.
 		let currPY = piY;
 		let meshDone = false; // Break variable for edgemaking loop
-		let resolution = 3; // Determines the density of vertices, 1 vertex for every 'resolution' verts (higher # is lower res)
+		let resolution = 2; // Determines the density of vertices, 1 vertex for every 'resolution' verts (higher # is lower res)
 		let circleSamples = resolution*resolution; // So we don't need to do this a lot, could be lower?
 		let lastAngle = 0; // Hold on to angle so check starts from last angle, not from top.
 		let xMax = 0,yMax = 0; // Store the min and max coordinate values for vertices to save time in the interior mesh gen, only need to check coords inside these values.
@@ -155,7 +155,7 @@ window.addEventListener('load', function(ev) {
 				let sampleX = Math.floor(Math.cos((2*Math.PI*(lastAngle+i))/circleSamples)*resolution);
 				let sampleY = Math.floor(Math.sin((2*Math.PI*(lastAngle+i))/circleSamples)*resolution);
 				
-				// If sampled pixel has a red value of 255 (therefore is white/an edge), make it the new current vertex
+				// If sampled pixel has a red value of <= 100 (therefore is an edge), make it the new current vertex
 				if(data[4*((sampleX+currPX)+(canvas.width*(sampleY+currPY)))] >= 100){
 					
 					currPX = sampleX + currPX;
@@ -164,11 +164,8 @@ window.addEventListener('load', function(ev) {
 					lastAngle = lastAngle+i;
 					
 					break;
-					
 				}
-				
 				// Counterclockwise check, trying to find the closest in both directions
-				
 				sampleX = Math.floor(Math.cos((2*Math.PI*(lastAngle-i))/circleSamples)*resolution);
 				sampleY = Math.floor(Math.sin((2*Math.PI*(lastAngle-i))/circleSamples)*resolution);
 				
@@ -180,14 +177,11 @@ window.addEventListener('load', function(ev) {
 					lastAngle = lastAngle-i;
 					
 					break;
-					
 				}
-				
 			}
 			
-			let iter = 0;
-			
 			// If current vert is within 'resolution' px of another vert, end edge creation
+			let iter = 0;
 			while(typeof(vertices[iter]) !== 'undefined'){ 
 				if(Math.pow(vertices[iter]-currPX,2)+Math.pow(vertices[iter+1]-currPY,2) <= Math.pow(resolution-4,2)){
 					meshDone = true;
@@ -197,7 +191,6 @@ window.addEventListener('load', function(ev) {
 			}
 			
 			// Create new vertex
-			
 			if(currPX > xMax){xMax = currPX} // Update mins and maxes
 			if(currPX < xMin){xMin = currPX}
 			if(currPY > yMax){yMax = currPY}
@@ -206,7 +199,6 @@ window.addEventListener('load', function(ev) {
 			vertices.push(currPX,currPY,0);
 			
 			// If we hit the end, break
-			
 			if(meshDone){
 				console.log("Edge mesh done");
 				break;
@@ -216,27 +208,23 @@ window.addEventListener('load', function(ev) {
 		
 		}
 		
-		////////////////
-		
-		// NEXT, IMPLEMENT RAYCAST CHECKING FOR INNER VERTICES
+		// RAYCAST CHECKING FOR INNER VERTICES
 		
 		let edges = []; // Create loop of line segment objects from edges
 		
 		for(let i = 3; i < vertices.length; i+=3){
-			
 			let seg = new lineSegment(vertices[i-3],vertices[i-2],vertices[i],vertices[i+1]);
 			edges.push(seg);
-			
 		}
 		
 		let seg = new lineSegment(vertices[0],vertices[1],vertices[vertices.length-3],vertices[vertices.length-2]);
 		edges.push(seg); // Line segment from first to last too
 		
-		let centerVertices = []; // New array for center vertices only until we figure out how to do mesh good
+		let centerVertices = []; // New array for center vertices only until we figure out how to index edge verts
 		
 		// Loop through possible inside values (values between maxes and mins), and check each with every line segment.
 		// If it hits an even number of line segs total, it's outside. Otherwise, inside.
-		console.log(xMin + " " + xMax + " " + yMin + " " + yMax);
+		//console.log(xMin + " " + xMax + " " + yMin + " " + yMax);
 		for(let i = xMin+resolution; i < xMax; i+=resolution){
 			for(let j = yMin+resolution; j < yMax; j+=resolution){
 				let numIntersections = 0;
@@ -247,18 +235,16 @@ window.addEventListener('load', function(ev) {
 					}
 				}
 				if(numIntersections % 2 == 1){
-					centerVertices.push(i,j,0); // CENTERVERTICES
+					centerVertices.push(i,j,0);
 				}
 			}
 		}
 		
-		////////////////
-		
-		// NEXT, CREATE FACE INDICES
+		// FACE INDEXING
 		
 		let indices = [];
-		for(let i = 0; i < centerVertices.length; i+=3){ // Using numedgeverts for now to ignore the complicated edge geometry.
-			let closeVerts = []; // list of verts within resolution of current vertex
+		for(let i = 0; i < centerVertices.length; i+=3){
+			let closeVerts = []; // list of verts within 'resolution' of current vertex
 			for(let j = 0; j < centerVertices.length; j+= 3){
 				let dist = Math.sqrt(Math.pow(centerVertices[i]-centerVertices[j],2) + Math.pow(centerVertices[i+1]-centerVertices[j+1],2)); // Distance between verts
 				if(i != j && dist <= resolution*1.33){ // Adjust this value and make it so there aren't overlapping faces. Also only push verts of higher index.
@@ -290,14 +276,12 @@ window.addEventListener('load', function(ev) {
 			}
 		}
 		
-		///////
-		
 		/*for(let i = 0; i < indices.length; i+=3){
 			console.log("Face: " + indices[i] + " " + indices[i+1] + " " + indices[i+2]);
 		}*/
 		//console.log(indices.length/3);
 		
-		// Converting vert data from pixels to a 2xN coordinate space and displacing on z axis
+		// Converting vert data from pixels to a 2xN coordinate space and displacing on the Z axis.
 		let maxHeight = 0;
 		for(let i = 0; i < centerVertices.length; i+=3){
 			centerVertices[i] = (4*centerVertices[i]/canvas.width)-2;
@@ -316,25 +300,18 @@ window.addEventListener('load', function(ev) {
 			centerVertices[i+2] = minDist;
 		}
 		for(let i = 0; i < centerVertices.length; i+=3){ // Spherical falloff
-			centerVertices[i+2] = maxHeight-Math.pow(maxHeight-centerVertices[i+2],2);
+			centerVertices[i+2] = 1*(maxHeight-Math.pow(maxHeight-centerVertices[i+2],2));
 		}
 		
-		//ctx.putImageData(imageData, 0, 0); // Updates image, unnecessary
-		var geometry = new THREE.BufferGeometry(); // Making the mesh
+		// MAKING THE MESH
+		var geometry = new THREE.BufferGeometry(); 
 		geometry.setIndex( indices );
 		geometry.setAttribute( 'position', new THREE.Float32BufferAttribute(centerVertices, 3));
 		geometry.computeVertexNormals();
 		
 		var mesh = new THREE.Mesh(geometry,material);
 		scene.add(mesh);
-		
-		
-		
 	}
-
-let seg = new lineSegment(100,400,100,0);
-let p = new point(200,300);
-console.log(intersectCheck(seg,p));
 
 var button = document.querySelector('button');
 button.addEventListener('click', meshGen, false);
@@ -343,7 +320,6 @@ button.addEventListener('click', meshGen, false);
 
 
 let fram = 0;
-
 function animate() {
 	
 	fram++;
