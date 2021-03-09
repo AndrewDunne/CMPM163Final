@@ -222,9 +222,44 @@ window.addEventListener('load', function(ev) {
 					closeVerts.push(j/3);
 				}
 			}
-			
+
+			// Push non-duplicate faces to indices[]
+			for(let j = 0; j < closeVerts.length; j++){
+				if(closeVerts[j] == (i/3)-1 && j != 0 && centerVertices[closeVerts[0]*3] == centerVertices[closeVerts[0]*3-3]){ // push topleft faces if there's also a vert to the topleft
+					indices.push(i/3,closeVerts[j],closeVerts[j-1]);
+				}
+				if(closeVerts[j] == (i/3)+1 && j != closeVerts.length-1 && centerVertices[closeVerts[closeVerts.length-1]*3] == centerVertices[closeVerts[closeVerts.length-1]*3+3]){ // push botright faces if there's also a vert to the botright
+					indices.push(i/3,closeVerts[j],closeVerts[j+1]);
+				}
+			}
+		}
+		/*
+		var fullVerts = centerVertices.concat(vertices);
+		
+		//linking edge verts to center mesh
+		for(let i = 0; i < vertices.length; i+=3){
+			let closeVerts = [];
+			for(let j = 0; j < centerVertices.length; j+=3){
+				let dist = Math.sqrt(Math.pow(vertices[i]-centerVertices[j],2) + Math.pow(vertices[i+1]-centerVertices[j+1],2));
+				if(dist < resolution){
+					// Find absolute angle from next edge vert to every other close vert.
+					//let dot = vertices[(i+3)%vertices.length]*centerVertices[j]+vertices[(i+4)%vertices.length]*centerVertices[j+1]; // Modulo in case we are on the last element
+					//let det = vertices[(i+3)%vertices.length]*centerVertices[j+1]-vertices[(i+4)%vertices.length]*centerVertices[j];
+					let a1 = Math.atan2(vertices[(i+4)%vertices.length]-vertices[i+1],vertices[(i+3)%vertices.length]-vertices[i]); // absolute angle of next edge vert
+					let a2 = Math.atan2(centerVertices[j+1]-vertices[i+1],centerVertices[j]-vertices[i]); // absolute angle of close vert
+					
+					a2 += Math.PI-a1;
+					
+					if(a2 > Math.PI){
+						a2 -= 2 * Math.PI;
+					} // a2 now equals absolute angle between next edge vert and close vert
+					console.log(a2);
+					let v = new vertAngle(j/3,a2);
+					closeVerts.push(v);
+				}
+			}
 			// Sort closeVerts by angle
-			/*for(let m = 0; m < closeVerts.length-1;m++){
+			for(let m = 0; m < closeVerts.length-1;m++){
 				for(let n = 0; n < closeVerts.length-m-1; n++){
 					if(closeVerts[n].angle > closeVerts[n+1].angle){
 						let temp = closeVerts[n];
@@ -232,18 +267,28 @@ window.addEventListener('load', function(ev) {
 						closeVerts[n+1] = temp;
 					}
 				}
-			}*/
-
-			// Push non-duplicate faces to indices[]
-			for(let j = 0; j < closeVerts.length; j++){
-				if(closeVerts[j] == (i/3)-1 && j != 0){ // push topleft faces
-					indices.push(i/3,closeVerts[j],closeVerts[j-1]);
-				}
-				if(closeVerts[j] == (i/3)+1 && j != closeVerts.length-1){ // push botright faces
-					indices.push(i/3,closeVerts[j],closeVerts[j+1]);
-				}
 			}
-		}
+			
+			//Index edge verts into faces w/ center verts
+			for(let i = 0; i < closeVerts.length; i++){
+				let firstVert;
+				let secondVert;
+				if(i == 0){
+					firstVert = ((i+3)/3)%vertices.length+(centerVertices.length/3); // index of next edge vert in fullVerts
+				}
+				else{
+					firstVert = closeVerts[i].index;
+				}
+				if(i+1 == closeVerts.length){
+					secondVert = ((i-3)/3)%vertices.length+(centerVertices.length/3); // index of previous edge vert in fullVerts
+				}
+				else{
+					secondVert = closeVerts[i+1].index;
+				}
+				indices.push(i+centerVertices.length/3,firstVert,secondVert);
+			}
+		}*/
+		
 		
 		/*for(let i = 0; i < indices.length; i+=3){
 			console.log("Face: " + indices[i] + " " + indices[i+1] + " " + indices[i+2]);
@@ -254,7 +299,7 @@ window.addEventListener('load', function(ev) {
 		let maxHeight = 0;
 		for(let i = 0; i < centerVertices.length; i+=3){
 			centerVertices[i] = (4*centerVertices[i]/canvas.width)-2;
-			centerVertices[i+1] = -1*((4*centerVertices[i+1]/canvas.width)-2);
+			centerVertices[i+1] = -.7*((4*centerVertices[i+1]/canvas.width)-2);
 			let minDist = 5;
 			for(let j = 0; j < vertices.length; j+= 3){ // Set z displacement based on distance to closest edge vert
 				let currDist = Math.pow(Math.pow((4*vertices[j]/canvas.width)-2-centerVertices[i],2)+Math.pow(-1*((4*vertices[j+1]/canvas.width)-2)-centerVertices[i+1],2),.25);
@@ -286,7 +331,7 @@ var button = document.querySelector('button');
 button.addEventListener('click', meshGen, false);
 },false);
 
-// SLIDER TO ACTIVELY CHANGE RESOLUTION
+// RESOLUTION SLIDER
 
 var slider = document.getElementById("myRes");
 var output = document.getElementById("resVal");
