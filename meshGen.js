@@ -301,9 +301,9 @@ window.addEventListener('load', function(ev) {
 			indices.push(indices[i]+centerVertices.length/3);
 		}
 		// Connecting both sides of mesh
-		for(let i = 0; i < centerVertices.length; i++){
-			indices.push(i,(i+1)%centerVertices.length,(i+1)%centerVertices.length+centerVertices.length);
-			indices.push(i,i+centerVertices.length,(i+1)%centerVertices.length+centerVertices.length);
+		for(let i = 0; i < centerVertices.length/3; i++){
+			indices.push(i,(i+1)%(centerVertices.length/3),(i+1)%(centerVertices.length/3)+centerVertices.length/3);
+			indices.push(i,i+centerVertices.length/3,(i+1)%(centerVertices.length/3)+centerVertices.length/3);
 		}
 		
 		// Converting vert data from pixels to a 2xN coordinate space and displacing on the Z axis.
