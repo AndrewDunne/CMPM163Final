@@ -295,6 +295,17 @@ window.addEventListener('load', function(ev) {
 		}*/
 		//console.log(indices.length/3);
 		
+		// Indexing opposite side of mesh
+		let iLength = indices.length;
+		for(let i = 0; i < iLength; i++){
+			indices.push(indices[i]+centerVertices.length/3);
+		}
+		// Connecting both sides of mesh
+		for(let i = 0; i < centerVertices.length; i++){
+			indices.push(i,(i+1)%centerVertices.length,(i+1)%centerVertices.length+centerVertices.length);
+			indices.push(i,i+centerVertices.length,(i+1)%centerVertices.length+centerVertices.length);
+		}
+		
 		// Converting vert data from pixels to a 2xN coordinate space and displacing on the Z axis.
 		let maxHeight = 0;
 		for(let i = 0; i < centerVertices.length; i+=3){
@@ -316,11 +327,16 @@ window.addEventListener('load', function(ev) {
 		for(let i = 0; i < centerVertices.length; i+=3){ // Spherical falloff
 			centerVertices[i+2] = 1*(maxHeight-Math.pow(maxHeight-centerVertices[i+2],2));
 		}
+		let fullVerts = centerVertices.concat(centerVertices);
+		//console.log(centerVertices);
+		for(let i = centerVertices.length; i < centerVertices.length*2; i+=3){
+			fullVerts[i+2] = fullVerts[i+2-centerVertices.length]*-1;
+		}
 		
 		// MAKING THE MESH
 		var geometry = new THREE.BufferGeometry(); 
 		geometry.setIndex( indices );
-		geometry.setAttribute( 'position', new THREE.Float32BufferAttribute(centerVertices, 3));
+		geometry.setAttribute( 'position', new THREE.Float32BufferAttribute(fullVerts, 3));
 		geometry.computeVertexNormals();
 		
 		var mesh = new THREE.Mesh(geometry,material);
