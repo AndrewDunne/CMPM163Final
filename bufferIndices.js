@@ -11,6 +11,8 @@ function init() {
 
 	camera = new THREE.PerspectiveCamera( 27, window.innerWidth / window.innerHeight, 1, 3500 );
 	camera.position.z = 64;
+	camera.position.x = 10;
+	camera.position.y = 5;
 
 	scene = new THREE.Scene();
 	scene.background = new THREE.Color( 0x050505 );
@@ -26,19 +28,19 @@ function init() {
 
 	const indices = [];
 
-	const vertices = [];
+	var vertices = [];
 	const normals = [];
 	const colors = [];
 
-	const size = 20;
-	const segments = 10;
+	const size = 4;
+	const segments = 1;
 
 	const halfSize = size / 2;
 	const segmentSize = size / segments;
 
 	// generate vertices, normals and color data for a simple grid geometry
 
-	/*for ( let i = 0; i <= segments; i ++ ) {
+	for ( let i = 0; i <= segments; i ++ ) {
 
 		const y = ( i * segmentSize ) - halfSize;
 
@@ -68,7 +70,7 @@ function init() {
 			const b = i * ( segments + 1 ) + j;
 			const c = ( i + 1 ) * ( segments + 1 ) + j;
 			const d = ( i + 1 ) * ( segments + 1 ) + ( j + 1 );
-			*/
+			
 			/*
 			Ok how tf do indices work?
 			
@@ -81,7 +83,7 @@ function init() {
 			*/
 
 			// generate two faces (triangles) per iteration
-/*
+
 			indices.push( a, b, d ); // face one
 			indices.push( b, c, d ); // face two
 
@@ -89,8 +91,27 @@ function init() {
 		
 	}
 	
-	indices.push(0,2,22);
-	indices.push(0,37,10);*/
+	let iLength = indices.length;
+	for(let i = 0; i < iLength; i++){
+		indices.push(indices[i]+vertices.length/3);
+	}
+	for(let i = 0; i < vertices.length/3; i++){
+		indices.push(i,vertices.length/3+i,vertices.length/3+(i+1)%(vertices.length/3));
+		indices.push(i,(i+1)%(vertices.length/3),vertices.length/3+(i+1)%(vertices.length/3));
+	}
+	
+	console.log(indices);
+	
+	//indices.push(0,1,5);
+	
+	vertices = vertices.concat(vertices);
+	for(let i = vertices.length/2; i < vertices.length; i+=3){
+		vertices[i+2] = -10;
+	}
+	console.log(vertices);
+	
+	//indices.push(0,2,22);
+	//indices.push(0,37,10);
 	
 	/*for(let i = 0; i < 24; i++){
 		
@@ -98,23 +119,13 @@ function init() {
 		//normals.push( 0, 0, 1 );
 	}*/
 	
-	for(let i = -2; i < 3; i++){
-		for(let j = -2; j < 3; j++){
-			vertices.push(i,j,Math.pow(i+j,2)/4);
-		}
-		
-	}
-
-	for(let i = 0; i < (vertices.length/3); i++){
-		
-		
-		
-		indices.push(i,i-1,i+5);
-		indices.push(i,i-1,i-5);
-		indices.push(i,i+1,i-5);
-		indices.push(i,i+1,i+5);
-		
-	}
+	// vertices.push(0,0,-1);
+	// vertices.push(1,0,-1);
+	// vertices.push(1,1,0);
+	// vertices.push(0,1,0);
+	
+	//indices.push(0,1,2);
+	//indices.push(0,3,2);
 
 	//
 

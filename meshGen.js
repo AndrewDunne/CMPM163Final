@@ -40,7 +40,7 @@ function intersectCheck(seg,point){ // Checks if 2 line segments intersect each 
 
 var img = new Image();
 img.crossOrigin = 'anonymous';
-img.src = 'Tetromino.jpg';
+img.src = 'pokeball.jpg';
 
 var canvas = document.createElement("CANVAS");
 var ctx;
@@ -64,7 +64,9 @@ img.onload = function() {
 
 const controls = new OrbitControls(camera, renderer.domElement);
 
-var material = new THREE.MeshStandardMaterial({color: 0xffb0ff, metalness: .0, roughness: .3});
+
+var texture = THREE.ImageUtils.loadTexture("197.jpg");
+var material = new THREE.MeshStandardMaterial({metalness: .0, roughness: .3, map: texture, side: THREE.DoubleSide});
 
 const light = new THREE.AmbientLight( 0x707070 ); // soft white light
 const lightPoint = new THREE.PointLight( 0xf0f0f0,2,6,2 );
@@ -300,11 +302,38 @@ window.addEventListener('load', function(ev) {
 		for(let i = 0; i < iLength; i++){
 			indices.push(indices[i]+centerVertices.length/3);
 		}
+		let outsideVerts = []; // OutsideVerts is like the edges of centerVertices. Contains the indices of outside verts in centerVertices.
+		for(let i = 0; i < centerVertices.length; i+=3){
+			let numAdjacentVerts = 0;
+			for(let j = 0; j < centerVertices.length; j++){
+				if(Math.sqrt(Math.pow(centerVertices[i]-centerVertices[j],2) + Math.pow(centerVertices[i+1]-centerVertices[j+1],2)) < resolution*1.5){
+					numAdjacentVerts++;
+				}
+			}
+			if(numAdjacentVerts != 9){
+				outsideVerts.push(i/3);
+			}
+		}
+		//console.log(outsideVerts);
+		//console.log(centerVertices);
+		
 		// Connecting both sides of mesh
-		for(let i = 0; i < centerVertices.length/3; i++){
+		/*for(let i = 0; i < centerVertices.length/3; i++){
 			indices.push(i,(i+1)%(centerVertices.length/3),(i+1)%(centerVertices.length/3)+centerVertices.length/3);
 			indices.push(i,i+centerVertices.length/3,(i+1)%(centerVertices.length/3)+centerVertices.length/3);
-		}
+		}*/
+		//console.log(indices.length);
+		//console.log(centerVertices.length/3);
+		/*for(let i = 0; i < 10; i++){
+			console.log(outsideVerts[i],(outsideVerts[i]+1)%(centerVertices.length/3),(outsideVerts[i]+1)%(centerVertices.length/3)+centerVertices.length/3);
+			console.log(outsideVerts[i],outsideVerts[i]+centerVertices.length/3,(outsideVerts[i]+1)%(centerVertices.length/3)+centerVertices.length/3);
+			indices.push(outsideVerts[i],(outsideVerts[i]+1)%(centerVertices.length/3),(outsideVerts[i]+1)%(centerVertices.length/3)+centerVertices.length/3);
+			indices.push(outsideVerts[i],outsideVerts[i]+centerVertices.length/3,(outsideVerts[i]+1)%(centerVertices.length/3)+centerVertices.length/3);
+		}*/
+		//indices.push(0,3275,1);
+		//indices.push(0,3275,3276);
+		//console.log(outsideVerts.length);
+		//console.log(indices.length);
 		
 		// Converting vert data from pixels to a 2xN coordinate space and displacing on the Z axis.
 		let maxHeight = 0;
@@ -325,7 +354,10 @@ window.addEventListener('load', function(ev) {
 			centerVertices[i+2] = minDist;
 		}
 		for(let i = 0; i < centerVertices.length; i+=3){ // Spherical falloff
-			centerVertices[i+2] = 1*(maxHeight-Math.pow(maxHeight-centerVertices[i+2],2));
+			centerVertices[i+2] = (maxHeight-Math.pow(maxHeight-centerVertices[i+2],2)-.3);
+		}
+		for(let i = 0; i < outsideVerts.length; i++){
+			centerVertices[outsideVerts[i]*3+2] = 0;
 		}
 		let fullVerts = centerVertices.concat(centerVertices);
 		//console.log(centerVertices);
