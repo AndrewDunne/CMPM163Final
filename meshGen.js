@@ -40,7 +40,7 @@ function intersectCheck(seg,point){ // Checks if 2 line segments intersect each 
 
 var img = new Image();
 img.crossOrigin = 'anonymous';
-img.src = 'pokeball.jpg';
+img.src = 'Tetromino.jpg';
 
 var canvas = document.createElement("CANVAS");
 var ctx;
@@ -63,18 +63,20 @@ img.onload = function() {
 //var canvas = document.getElementById('myCanvas');
 
 const controls = new OrbitControls(camera, renderer.domElement);
+var material;
 
-
-var texture = THREE.ImageUtils.loadTexture("197.jpg");
-var material = new THREE.MeshStandardMaterial({metalness: .0, roughness: .3, map: texture, side: THREE.DoubleSide});
-
+var textureLoader = new THREE.TextureLoader();
+textureLoader.load('197.jpg', function (texture){
+	console.log('texture loaded');
+	material = new THREE.MeshStandardMaterial({metalness: .0, roughness: .3, map: texture, bumpMap: texture, bumpScale: .1, side: THREE.DoubleSide});
+});
 const light = new THREE.AmbientLight( 0x707070 ); // soft white light
 const lightPoint = new THREE.PointLight( 0xf0f0f0,2,6,2 );
-const lightPoint2 = new THREE.PointLight( 0xf0f0f0,2,3,2 );
-lightPoint.position.set(0,0,2);
-lightPoint.position.set(1,0,1);
+const lightPoint2 = new THREE.PointLight( 0xf0f0f0,1,3,2 );
+lightPoint2.position.set(0,0,-1);
 scene.add( light );
 scene.add(lightPoint);
+scene.add(lightPoint2);
 
 //const controls = new OrbitControls( camera, renderer.domElement );
 //controls.update();
@@ -314,26 +316,16 @@ window.addEventListener('load', function(ev) {
 				outsideVerts.push(i/3);
 			}
 		}
-		//console.log(outsideVerts);
-		//console.log(centerVertices);
 		
 		// Connecting both sides of mesh
-		/*for(let i = 0; i < centerVertices.length/3; i++){
+		/*for(let i = 0; i < centerVertices.length/3; i++){ // These are the correct ways to connect both sides of the mesh, however the input mesh sux so it looks weird
 			indices.push(i,(i+1)%(centerVertices.length/3),(i+1)%(centerVertices.length/3)+centerVertices.length/3);
 			indices.push(i,i+centerVertices.length/3,(i+1)%(centerVertices.length/3)+centerVertices.length/3);
 		}*/
-		//console.log(indices.length);
-		//console.log(centerVertices.length/3);
-		/*for(let i = 0; i < 10; i++){
-			console.log(outsideVerts[i],(outsideVerts[i]+1)%(centerVertices.length/3),(outsideVerts[i]+1)%(centerVertices.length/3)+centerVertices.length/3);
-			console.log(outsideVerts[i],outsideVerts[i]+centerVertices.length/3,(outsideVerts[i]+1)%(centerVertices.length/3)+centerVertices.length/3);
+		/*for(let i = 0; i < 10; i++){ 
 			indices.push(outsideVerts[i],(outsideVerts[i]+1)%(centerVertices.length/3),(outsideVerts[i]+1)%(centerVertices.length/3)+centerVertices.length/3);
 			indices.push(outsideVerts[i],outsideVerts[i]+centerVertices.length/3,(outsideVerts[i]+1)%(centerVertices.length/3)+centerVertices.length/3);
 		}*/
-		//indices.push(0,3275,1);
-		//indices.push(0,3275,3276);
-		//console.log(outsideVerts.length);
-		//console.log(indices.length);
 		
 		// Converting vert data from pixels to a 2xN coordinate space and displacing on the Z axis.
 		let maxHeight = 0;
@@ -345,7 +337,6 @@ window.addEventListener('load', function(ev) {
 				let currDist = Math.pow(Math.pow((4*vertices[j]/canvas.width)-2-centerVertices[i],2)+Math.pow(-1*((4*vertices[j+1]/canvas.width)-2)-centerVertices[i+1],2),.25);
 				if(currDist < minDist){
 					minDist = currDist;
-					//console.log(currDist);
 				}
 			}
 			if(minDist > maxHeight){
@@ -360,16 +351,28 @@ window.addEventListener('load', function(ev) {
 			centerVertices[outsideVerts[i]*3+2] = 0;
 		}
 		let fullVerts = centerVertices.concat(centerVertices);
-		//console.log(centerVertices);
 		for(let i = centerVertices.length; i < centerVertices.length*2; i+=3){
 			fullVerts[i+2] = fullVerts[i+2-centerVertices.length]*-1;
 		}
+		
+		// MAPPING UVs
+		// xMin = xMin/canvas.width;
+		// xMax = yMax/canvas.width;
+		// yMax = -1*(yMax/canvas.width)+1;
+		// yMin = -1*(yMin/canvas.width)+1;
+		
+		let UVs = [];
+		for(let i = 0; i < fullVerts.length; i+=3){
+			UVs.push((fullVerts[i]+2)/4,(fullVerts[i+1]+2)/4);
+		}
+		
 		
 		// MAKING THE MESH
 		var geometry = new THREE.BufferGeometry(); 
 		geometry.setIndex( indices );
 		geometry.setAttribute( 'position', new THREE.Float32BufferAttribute(fullVerts, 3));
-		geometry.computeVertexNormals();
+		geometry.setAttribute( 'uv', new THREE.Float32BufferAttribute(UVs, 2));
+		geometry.computeVertexNormals(); // Normals for back face the wrong way I think
 		
 		var mesh = new THREE.Mesh(geometry,material);
 		scene.add(mesh);

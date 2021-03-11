@@ -9,10 +9,9 @@
 		</style>
 	</head>
 	<body>
-		<button type="button" style="float:center;">Generate Mesh</button>
-		<p>Mesh Resolution (lower is better): <span id="resVal"></span></p>
-		<input type="range" min="1" max="10" value="5" class="slider" id="myRes">
-		<!--<canvas id="myCanvas" width="400" height="400" style="border:1px solid #000000;float:left;">-->
+		<button type="button" style="float:right;line-height: 3em;">Generate Mesh</button>
+		<div><p style="float:center;">Mesh Resolution (lower is better): <span id="resVal" style="float:center;"></span></p></div>
+		<input type="range" min="1" max="10" value="5" class="slider" id="myRes" style="float:center;">
 		<script src="three.js-master/build/three.js"></script>
 		<script src="meshGen.js" type="module"></script>
 	</body>
