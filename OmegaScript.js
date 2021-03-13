@@ -1,3 +1,129 @@
+var img = new Image();
+img.crossOrigin = 'anonymous';
+img.src = 'picture.jpg';
+var canvas = document.createElement("canvas");
+
+const monoValue = (r,g,b) => (r + g + b) / 3;
+
+function rgbValue(img, x, y, c)     // 'c' for RGBA channel
+{
+    return img.data[((y * (4 * img.width)) + (4 * x)) + c];
+}
+
+function setMonochrome(img, x, y, v)  // 'v' for value
+{
+	img.data[((y * (4 * img.width)) + (4 * x)) + 0] = v;
+	img.data[((y * (4 * img.width)) + (4 * x)) + 1] = v;
+	img.data[((y * (4 * img.width)) + (4 * x)) + 2] = v;
+}
+
+function pxlValue(img, x, y)  // we just read the 'red' value
+{
+    return img.data[((y * (4 * img.width)) + (4 * x))];
+}
+
+function setRGB(img, x, y, rgb)
+{
+	img.data[((y * (4 * img.width)) + (4 * x)) + 0] = rgb[0];
+	img.data[((y * (4 * img.width)) + (4 * x)) + 1] = rgb[1];
+	img.data[((y * (4 * img.width)) + (4 * x)) + 2] = rgb[2];
+	img.data[((y * (4 * img.width)) + (4 * x)) + 3] = 255;
+}
+
+
+function edgeDetect(img, x, y)
+{
+	var gradX = 0;
+	var gradY = 0;
+
+	gradX += pxlValue(img, x-1, y-1) * -2;
+	gradX += pxlValue(img, x-1, y+0) * -4;
+	gradX += pxlValue(img, x-1, y+1) * -2;
+	gradX += pxlValue(img, x+1, y-1) *  2;
+	gradX += pxlValue(img, x+1, y+0) *  4;
+	gradX += pxlValue(img, x+1, y+1) *  2;
+
+	gradY += pxlValue(img, x-1, y-1) * -2;
+	gradY += pxlValue(img, x+0, y-1) * -4;
+	gradY += pxlValue(img, x+1, y-1) * -2;
+	gradY += pxlValue(img, x-1, y+1) *  2;
+	gradY += pxlValue(img, x+0, y+1) *  4;
+	gradY += pxlValue(img, x+1, y+1) *  2;
+
+	gradX /= 9;
+	gradY /= 9;
+
+	return Math.sqrt(Math.pow(gradX, 2) + Math.pow(gradY, 2));
+}
+
+var TheCanvas;
+
+img.onload = function() {
+	canvas.width = this.width;
+	canvas.height = this.height;
+	TheCanvas = canvas.getContext('2d');
+  TheCanvas.drawImage(img, 0, 0);
+  document.body.appendChild(canvas);
+  img.style.display = 'none';
+  let pixels = TheCanvas.getImageData(0, 0, this.width, this.height);
+  let buffer = TheCanvas.createImageData(pixels);
+  console.log(pixels.length);
+
+
+	for (let x = 1; x < 340; x++)
+	{
+		for (let y = 1; y < 1350; y++)
+		{
+			let r = rgbValue(pixels, x, y, 0);
+			let g = rgbValue(pixels, x, y, 1);
+			let b = rgbValue(pixels, x, y, 2);
+			setMonochrome(pixels, x, y, monoValue(r, g, b));
+		}
+	}
+
+for (let x = 1; x < this.width; x++)
+	{
+		for (let y = 1; y < this.height; y++)
+		{
+			let v = edgeDetect(pixels, x, y)*7;
+			setRGB(buffer, x,y, [v,v,v]);
+		}
+	}
+
+
+	TheCanvas.putImageData(buffer, 0, 0);
+
+
+};
+
+
+
+
+
+var hoveredColor = document.getElementById('hovered-color');
+var selectedColor = document.getElementById('selected-color');
+
+
+function pick(event, destination) {
+  var x = event.layerX;
+  var y = event.layerY;
+  var pixel = TheCanvas.getImageData(x, y, 1, 1);
+  var data = pixel.data;
+
+	const rgba = `rgba(${data[0]}, ${data[1]}, ${data[2]}, ${data[3] / 255})`;
+	destination.style.background = rgba;
+	destination.textContent = rgba;
+
+	return rgba;
+}
+
+canvas.addEventListener('mousemove', function(event) {
+	//pick(event, hoveredColor);
+});
+canvas.addEventListener('click', function(event) {
+	//pick(event, selectedColor);
+});
+
 import { OrbitControls } from './three.js-master/OrbitControls.js'
 
 class lineSegment{
@@ -38,31 +164,31 @@ function intersectCheck(seg,point){ // Checks if 2 line segments intersect each 
 	
 }
 
-var img = new Image();
-img.crossOrigin = 'anonymous';
-img.src = 'Tetromino.jpg';
+// var img = new Image();
+// img.crossOrigin = 'anonymous';
+// img.src = 'Tetromino.jpg';
 
-var canvas = document.createElement("CANVAS");
-var ctx;
+// var canvas = document.createElement("CANVAS");
+// var ctx;
 var renderer = new THREE.WebGLRenderer();
 renderer.setSize(500, 500);
 document.body.appendChild(renderer.domElement);
 var scene = new THREE.Scene();
 var camera = new THREE.PerspectiveCamera(20, window.innerWidth/window.innerHeight, 0.1, 1000);
-var renderer = new THREE.WebGLRenderer();
-document.body.appendChild(renderer.domElement);
+// var renderer = new THREE.WebGLRenderer();
+// document.body.appendChild(renderer.domElement);
 camera.position.z = 8;
 
-img.onload = function() {
-	console.log(this.width + 'x' + this.height);
-	canvas.width = this.width;
-	canvas.height = this.height;
-	renderer.setSize(this.width, this.height);
-	ctx = canvas.getContext('2d');
-	ctx.drawImage(img, 0, 0);
-	document.body.appendChild(canvas);
-};
-var canvas = document.getElementById('myCanvas');
+// img.onload = function() {
+	//console.log(this.width + 'x' + this.height);
+	// canvas.width = this.width;
+	// canvas.height = this.height;
+	// renderer.setSize(this.width, this.height);
+	// ctx = canvas.getContext('2d');
+	// ctx.drawImage(img, 0, 0);
+	// document.body.appendChild(canvas);
+// };
+//var canvas = document.getElementById('myCanvas');
 
 const controls = new OrbitControls(camera, renderer.domElement);
 var material;
@@ -80,29 +206,40 @@ scene.add( light );
 scene.add(lightPoint);
 scene.add(lightPoint2);
 
+//const controls = new OrbitControls( camera, renderer.domElement );
+//controls.update();
 
 window.addEventListener('load', function(ev) {
 	function meshGen(){
 		
+		//TheCanvas = canvas.getContext('2d');
+		  let pixels = TheCanvas.getImageData(0, 0, canvas.width, canvas.height);
+		  //console.log(typeof(buffer));
+		
 		const vertices = [];
-		const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-		const data = imageData.data;
-		console.log(imageData.length);
+		//const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+		//const data = imageData.data;
 		var piX = 0; // pixelIndexX stores the X index of the pixel we're on
 		var piY = 0; // Same but for y
 		
 		// FIND FIRST POINT AND ADD IT. 
 		
-		while (piY * canvas.width < data.length) { // While not at end of data
+		// console.log(TheCanvas);
+		 console.log(pixels.length);
+		// console.log(canvas);
+		//let bufLength = canvas.height * canvas.width * 4;
+		//console.log(piY * canvas.width);
+		while (piY * canvas.width < pixels.length) { // While not at end of data
 			let imageIndex = (piX+(canvas.width*piY))*4; // Easier parsing of RGB, stores image data index
-			if(data[imageIndex]+data[imageIndex+1]+data[imageIndex+2] == 765){ //if white
-				//console.log("Coords of first point: " + piX + " " + piY);
+			if(pixels[imageIndex]+pixels[imageIndex+1]+pixels[imageIndex+2] >= 400){ //if white
+				console.log("Coords of first point: " + piX + " " + piY);
 				break;
 			}
 			piX++;
 			if(piX == canvas.width){ // Reach end of row
 				piX = 0;
 				piY++;
+				console.log(pixels[imageIndex]);
 			}
 			
 		}
@@ -132,7 +269,7 @@ window.addEventListener('load', function(ev) {
 				let sampleY = Math.floor(Math.sin((2*Math.PI*(lastAngle+i))/circleSamples)*resolution);
 				
 				// If sampled pixel has a red value of <= 100 (therefore is an edge), make it the new current vertex
-				if(data[4*((sampleX+currPX)+(canvas.width*(sampleY+currPY)))] >= 100){
+				if(pixels[4*((sampleX+currPX)+(canvas.width*(sampleY+currPY)))] >= 100){
 					
 					currPX = sampleX + currPX;
 					currPY = sampleY + currPY;
@@ -145,7 +282,7 @@ window.addEventListener('load', function(ev) {
 				sampleX = Math.floor(Math.cos((2*Math.PI*(lastAngle-i))/circleSamples)*resolution);
 				sampleY = Math.floor(Math.sin((2*Math.PI*(lastAngle-i))/circleSamples)*resolution);
 				
-				if(data[4*((sampleX+currPX)+(canvas.width*(sampleY+currPY)))] >= 100){
+				if(pixels[4*((sampleX+currPX)+(canvas.width*(sampleY+currPY)))] >= 100){
 					
 					currPX = sampleX + currPX;
 					currPY = sampleY + currPY;
@@ -369,10 +506,10 @@ window.addEventListener('load', function(ev) {
 		
 		
 		// MAKING THE MESH
-		var geometry = new THREE.dataGeometry(); 
+		var geometry = new THREE.BufferGeometry(); 
 		geometry.setIndex( indices );
-		geometry.setAttribute( 'position', new THREE.Float32dataAttribute(fullVerts, 3));
-		geometry.setAttribute( 'uv', new THREE.Float32dataAttribute(UVs, 2));
+		geometry.setAttribute( 'position', new THREE.Float32BufferAttribute(fullVerts, 3));
+		geometry.setAttribute( 'uv', new THREE.Float32BufferAttribute(UVs, 2));
 		geometry.computeVertexNormals(); // Normals for back face the wrong way I think
 		
 		var mesh = new THREE.Mesh(geometry,material);

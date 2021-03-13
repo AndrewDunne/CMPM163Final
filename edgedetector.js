@@ -1,8 +1,10 @@
 var img = new Image();
 img.crossOrigin = 'anonymous';
-img.src = 'tomsface.jpg';
-var canvas = document.getElementById('canvas');
-var TheCanvas = canvas.getContext('2d');
+img.src = 'pokeball.jpg';
+var canvas = document.createElement("canvas");
+var ctx;
+// var canvas = document.getElementById('canvas');
+// var TheCanvas = canvas.getContext('2d');
 
 const monoValue = (r,g,b) => (r + g + b) / 3;
 
@@ -57,11 +59,12 @@ function edgeDetect(img, x, y)
 	return Math.sqrt(Math.pow(gradX, 2) + Math.pow(gradY, 2));
 }
 
-
-
-
 img.onload = function() {
+	canvas.width = this.width;
+	canvas.height = this.height;
+	var TheCanvas = canvas.getContext('2d');
   TheCanvas.drawImage(img, 0, 0);
+  document.body.appendChild(canvas);
   img.style.display = 'none';
   let pixels = TheCanvas.getImageData(0, 0, 340, 1350);
   let buffer = TheCanvas.createImageData(pixels);
