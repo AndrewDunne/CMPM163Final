@@ -67,7 +67,6 @@ img.onload = function() {
   img.style.display = 'none';
   let pixels = TheCanvas.getImageData(0, 0, this.width, this.height);
   let buffer = TheCanvas.createImageData(pixels);
-  console.log(pixels.length);
 
 
 	for (let x = 1; x < 340; x++)
@@ -89,10 +88,121 @@ for (let x = 1; x < this.width; x++)
 			setRGB(buffer, x,y, [v,v,v]);
 		}
 	}
-
+	
+	for (let x = 1; x < this.width; x++)
+	{
+		for (let y = 1; y < this.height; y++)
+		{
+			let v = edgeDetect(pixels, x, y)*7;
+			setRGB(buffer, x,y, [v,v,v]);
+		}
+	}
 
 	TheCanvas.putImageData(buffer, 0, 0);
 
+	let apxI = TheCanvas.getImageData(0, 0, this.width, this.height);
+	let apx = apxI.data;
+	// Turning it into a silhouette
+	/*
+	for (let x = 0; x < this.width; x++)
+	{
+		let topInner, bottomInner;
+		let thereIsEdge = false;
+		for (let y = 0; y < this.height; y++)
+		{
+			let imageIndex = (x+(canvas.width*y))*4;
+			if(apx[imageIndex] > 150){
+				thereIsEdge = true;
+				while(apx[imageIndex] > 150 && y <= this.height){
+					imageIndex = (x+(canvas.width*y))*4;
+					y++
+				}
+				topInner = y;
+				break;
+			}
+			
+		}
+		for (let y = this.height-1; y > 0; y--)
+		{
+			let imageIndex = (x+(canvas.width*y))*4;
+			if(apx[imageIndex] > 150){
+				while(apx[imageIndex] > 150 && y > 0){
+					imageIndex = (x+(canvas.width*y))*4;
+					y--
+					}
+				bottomInner = y;
+				break;
+			}
+			
+			
+		}
+		console.log(topInner);
+		console.log(bottomInner);
+		if(thereIsEdge){
+			for(let y = topInner; y < bottomInner; y++){
+				setRGB(buffer, x, y, [0,0,0]);
+			}
+		}
+	}*/
+	
+	// Magic wand-esque silhouette finder
+	
+	let checked = [];
+	for(let i = 0; i < canvas.width*canvas.height; i++){
+		checked.push(0)
+	}
+	let queue = [];
+	queue.push(0);
+	// console.log(canvas.width);
+	// console.log(canvas.height);
+	// console.log(apx[canvas.width*4]);
+	//console.log(stack.includes(1));
+	
+	while(queue.length > 0 && queue.length < 1000){
+		let curr = queue.shift();
+		//console.log("x: " + Math.floor(curr/canvas.width) + " y: " + curr%canvas.width);
+		checked[curr] = 1; // Add adjacent 4 pixels to stack if not already checked and not an edge
+		if(!checked[curr+canvas.width] && curr+canvas.width <= canvas.width*canvas.height && apx[(curr+canvas.width)*4] < 100 && !queue.includes(curr+canvas.width)){
+			queue.push(curr+canvas.width);
+			//console.log("bot");
+		}
+		if(!checked[curr-canvas.width] && curr-canvas.width >= 0 && apx[(curr-canvas.width)*4] < 100 && !queue.includes(curr-canvas.width)){
+			queue.push(curr-canvas.width);
+			//console.log("top");
+		}
+		if(!checked[curr+1] && curr+1 <= canvas.width*canvas.height && apx[(curr+1)*4] < 100 && !queue.includes(curr+1)){
+			queue.push(curr+1);
+			//console.log("right");
+		}
+		if(!checked[curr-1] && curr-1 >= 0 && apx[(curr-1)*4] < 100 && !queue.includes(curr-1)){
+			queue.push(curr-1);
+			//console.log("left");
+		}
+		//console.log("length: " + queue.length);
+	}
+	
+	console.log(checked);
+	console.log(queue);
+	
+	// Silhouette detected, expand selection by 3
+	
+	for(let i = 0; i < 3; i++){
+		let expand = [];
+		for(let j = 0; j < checked.length; j++){
+			if(checked[j-canvas.width] == 1 || checked[j-1] == 1 || checked[j+canvas.width] == 1 || checked[j+1] == 1 || checked[j] == 1){
+				expand[j] = 1;
+			}
+		}
+		checked = expand;
+	}
+	
+	for(let i = 0; i < canvas.width*canvas.height; i++){
+		if(!checked[i]){
+			setRGB(buffer, i%canvas.width, Math.floor(i/canvas.width), [0,0,0]);
+		}
+	}
+	
+	TheCanvas.putImageData(buffer, 0, 0);
 
 };
 
