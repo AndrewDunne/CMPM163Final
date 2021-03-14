@@ -44,9 +44,7 @@ img.src = 'Tetromino.jpg';
 
 var canvas = document.createElement("CANVAS");
 var ctx;
-var renderer = new THREE.WebGLRenderer();
-renderer.setSize(500, 500);
-document.body.appendChild(renderer.domElement);
+
 var scene = new THREE.Scene();
 var camera = new THREE.PerspectiveCamera(20, window.innerWidth/window.innerHeight, 0.1, 1000);
 var renderer = new THREE.WebGLRenderer();
@@ -54,7 +52,7 @@ document.body.appendChild(renderer.domElement);
 camera.position.z = 8;
 
 img.onload = function() {
-	console.log(this.width + 'x' + this.height);
+	//console.log(this.width + 'x' + this.height);
 	canvas.width = this.width;
 	canvas.height = this.height;
 	renderer.setSize(this.width, this.height);
@@ -62,7 +60,7 @@ img.onload = function() {
 	ctx.drawImage(img, 0, 0);
 	document.body.appendChild(canvas);
 };
-var canvas = document.getElementById('myCanvas');
+//var canvas = document.getElementById('myCanvas');
 
 const controls = new OrbitControls(camera, renderer.domElement);
 var material;
@@ -80,6 +78,8 @@ scene.add( light );
 scene.add(lightPoint);
 scene.add(lightPoint2);
 
+//const controls = new OrbitControls( camera, renderer.domElement );
+//controls.update();
 
 window.addEventListener('load', function(ev) {
 	function meshGen(){
@@ -87,7 +87,7 @@ window.addEventListener('load', function(ev) {
 		const vertices = [];
 		const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 		const data = imageData.data;
-		console.log(imageData.length);
+		console.log(data.length);
 		var piX = 0; // pixelIndexX stores the X index of the pixel we're on
 		var piY = 0; // Same but for y
 		
@@ -369,10 +369,10 @@ window.addEventListener('load', function(ev) {
 		
 		
 		// MAKING THE MESH
-		var geometry = new THREE.dataGeometry(); 
+		var geometry = new THREE.BufferGeometry(); 
 		geometry.setIndex( indices );
-		geometry.setAttribute( 'position', new THREE.Float32dataAttribute(fullVerts, 3));
-		geometry.setAttribute( 'uv', new THREE.Float32dataAttribute(UVs, 2));
+		geometry.setAttribute( 'position', new THREE.Float32BufferAttribute(fullVerts, 3));
+		geometry.setAttribute( 'uv', new THREE.Float32BufferAttribute(UVs, 2));
 		geometry.computeVertexNormals(); // Normals for back face the wrong way I think
 		
 		var mesh = new THREE.Mesh(geometry,material);

@@ -1,6 +1,6 @@
 var img = new Image();
 img.crossOrigin = 'anonymous';
-img.src = 'picture.jpg';
+img.src = 'light.png';
 var canvas = document.createElement("canvas");
 
 const monoValue = (r,g,b) => (r + g + b) / 3;
@@ -213,7 +213,8 @@ window.addEventListener('load', function(ev) {
 	function meshGen(){
 		
 		//TheCanvas = canvas.getContext('2d');
-		  let pixels = TheCanvas.getImageData(0, 0, canvas.width, canvas.height);
+		  let px = TheCanvas.getImageData(0, 0, canvas.width, canvas.height);
+		  let pixels = px.data;
 		  //console.log(typeof(buffer));
 		
 		const vertices = [];
@@ -225,13 +226,13 @@ window.addEventListener('load', function(ev) {
 		// FIND FIRST POINT AND ADD IT. 
 		
 		// console.log(TheCanvas);
-		 console.log(pixels.length);
+		//console.log(pixels.length);
 		// console.log(canvas);
 		//let bufLength = canvas.height * canvas.width * 4;
 		//console.log(piY * canvas.width);
 		while (piY * canvas.width < pixels.length) { // While not at end of data
 			let imageIndex = (piX+(canvas.width*piY))*4; // Easier parsing of RGB, stores image data index
-			if(pixels[imageIndex]+pixels[imageIndex+1]+pixels[imageIndex+2] >= 400){ //if white
+			if(pixels[imageIndex]+pixels[imageIndex+1]+pixels[imageIndex+2] >= 700){ //if white
 				console.log("Coords of first point: " + piX + " " + piY);
 				break;
 			}
@@ -239,7 +240,6 @@ window.addEventListener('load', function(ev) {
 			if(piX == canvas.width){ // Reach end of row
 				piX = 0;
 				piY++;
-				console.log(pixels[imageIndex]);
 			}
 			
 		}
@@ -269,7 +269,7 @@ window.addEventListener('load', function(ev) {
 				let sampleY = Math.floor(Math.sin((2*Math.PI*(lastAngle+i))/circleSamples)*resolution);
 				
 				// If sampled pixel has a red value of <= 100 (therefore is an edge), make it the new current vertex
-				if(pixels[4*((sampleX+currPX)+(canvas.width*(sampleY+currPY)))] >= 100){
+				if(pixels[4*((sampleX+currPX)+(canvas.width*(sampleY+currPY)))] >= 200){
 					
 					currPX = sampleX + currPX;
 					currPY = sampleY + currPY;
@@ -282,7 +282,7 @@ window.addEventListener('load', function(ev) {
 				sampleX = Math.floor(Math.cos((2*Math.PI*(lastAngle-i))/circleSamples)*resolution);
 				sampleY = Math.floor(Math.sin((2*Math.PI*(lastAngle-i))/circleSamples)*resolution);
 				
-				if(pixels[4*((sampleX+currPX)+(canvas.width*(sampleY+currPY)))] >= 100){
+				if(pixels[4*((sampleX+currPX)+(canvas.width*(sampleY+currPY)))] >= 200){
 					
 					currPX = sampleX + currPX;
 					currPY = sampleY + currPY;
