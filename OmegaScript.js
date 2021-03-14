@@ -373,6 +373,7 @@ window.addEventListener('load', function(ev) {
 			// Check all pixels 'resolution' distance away from current vert for edges clockwise.
 			// Could use a smaller number than resolution^2? Maybe res*log(res)?
 			// Edge data must be thicker than 1px, if it's 1px then it might miss checks on tight pixel diagonals
+			let meshGood = false;
 			for(let i = 0; i < circleSamples/2; i++){
 				// (sampleX+currPX,sampleY+currPY) is the coordinates for the current sampled pixel
 				let sampleX = Math.floor(Math.cos((2*Math.PI*(lastAngle+i))/circleSamples)*resolution);
@@ -381,12 +382,25 @@ window.addEventListener('load', function(ev) {
 				// If sampled pixel has a red value of <= 100 (therefore is an edge), make it the new current vertex
 				if(pixels[4*((sampleX+currPX)+(canvas.width*(sampleY+currPY)))] >= 200){
 					
-					currPX = sampleX + currPX;
-					currPY = sampleY + currPY;
+					let iter = 0;
+					let closeToVert = false;
+					while(typeof(vertices[iter]) !== 'undefined'){ // Don't make a new vert close to another, just keep checking. This prevents doubling back in certain places.
+						if(Math.pow(vertices[iter]-(sampleX+currPX),2)+Math.pow(vertices[iter+1]-(sampleY+currPY),2) <= Math.pow(Math.ceil(resolution/4),2)){
+							closeToVert = true;
+						}
+						iter+=3;
+					}
 					
-					lastAngle = lastAngle+i;
+					if(!closeToVert){
+						currPX = sampleX + currPX;
+						currPY = sampleY + currPY;
+						
+						lastAngle = lastAngle+i;
+						
+						meshGood = true;
+						break;
+					}
 					
-					break;
 				}
 				// Counterclockwise check, trying to find the closest in both directions
 				sampleX = Math.floor(Math.cos((2*Math.PI*(lastAngle-i))/circleSamples)*resolution);
@@ -394,23 +408,41 @@ window.addEventListener('load', function(ev) {
 				
 				if(pixels[4*((sampleX+currPX)+(canvas.width*(sampleY+currPY)))] >= 200){
 					
-					currPX = sampleX + currPX;
-					currPY = sampleY + currPY;
-					
-					lastAngle = lastAngle-i;
-					
-					break;
+					let iter = 0;
+					let closeToVert = false;
+					while(typeof(vertices[iter]) !== 'undefined'){ 
+						if(Math.pow(vertices[iter]-(sampleX+currPX),2)+Math.pow(vertices[iter+1]-(sampleY+currPY),2) <= Math.pow(Math.ceil(resolution/4),2)){
+							closeToVert = true;
+						}
+						iter+=3;
+					}
+					if(!closeToVert){
+						currPX = sampleX + currPX;
+						currPY = sampleY + currPY;
+						
+						lastAngle = lastAngle-i;
+						
+						meshGood = true;
+						break;
+					}
 				}
 			}
 			
-			// If current vert is within ciel('resolution'/4) px of another vert, end edge creation
-			let iter = 0;
-			while(typeof(vertices[iter]) !== 'undefined'){ 
-				if(Math.pow(vertices[iter]-currPX,2)+Math.pow(vertices[iter+1]-currPY,2) <= Math.pow(Math.ceil(resolution/4),2)){
-					meshDone = true;
-					break;
-				}
-				iter+=3;
+			// If current vert is within ciel('resolution'/4) px of another vert 3 times in a row, end edge creation. 3 times to avoid spiky parts ending the mesh
+			// let iter = 0;
+			// while(typeof(vertices[iter]) !== 'undefined'){ 
+				// if(Math.pow(vertices[iter]-currPX,2)+Math.pow(vertices[iter+1]-currPY,2) <= Math.pow(Math.ceil(resolution/4),2)){
+					
+					// meshDone++;
+				// }
+				// iter+=3;
+			// }
+			
+			if(meshGood){
+				meshGood = false;
+			}
+			else{
+				meshDone = true;
 			}
 			
 			if(currPX > xMax){xMax = currPX} // Update mins and maxes
@@ -420,7 +452,7 @@ window.addEventListener('load', function(ev) {
 			
 			vertices.push(currPX,currPY,0);
 			
-			// If we hit the end, break
+			//If we hit the end, break
 			if(meshDone){
 				console.log("Edge mesh done");
 				console.log(currPX + " " + currPY);
