@@ -2,6 +2,7 @@ var img = new Image();
 img.crossOrigin = 'anonymous';
 img.src = 'light.png';
 var canvas = document.createElement("canvas");
+var canvas2 = document.createElement("canvas"); // Displays original image for reference
 
 const monoValue = (r,g,b) => (r + g + b) / 3;
 
@@ -57,13 +58,19 @@ function edgeDetect(img, x, y)
 }
 
 var TheCanvas;
+var TheCanvas2;
 
 img.onload = function() {
 	canvas.width = this.width;
 	canvas.height = this.height;
+	canvas2.width = this.width;
+	canvas2.height = this.height;
 	TheCanvas = canvas.getContext('2d');
   TheCanvas.drawImage(img, 0, 0);
+  TheCanvas2 = canvas2.getContext('2d');
+  TheCanvas2.drawImage(img, 0, 0);
   document.body.appendChild(canvas);
+  document.body.appendChild(canvas2);
   img.style.display = 'none';
   let pixels = TheCanvas.getImageData(0, 0, this.width, this.height);
   let buffer = TheCanvas.createImageData(pixels);
@@ -304,7 +311,7 @@ const controls = new OrbitControls(camera, renderer.domElement);
 var material;
 
 var textureLoader = new THREE.TextureLoader();
-textureLoader.load('197.jpg', function (texture){
+textureLoader.load('light.png', function (texture){
 	console.log('texture loaded');
 	material = new THREE.MeshStandardMaterial({metalness: .0, roughness: .3, map: texture, bumpMap: texture, bumpScale: .1, side: THREE.DoubleSide});
 });
@@ -360,7 +367,7 @@ window.addEventListener('load', function(ev) {
 		let currPX = piX; // Stores current pixel coordinates for comparison. It may be useful to know piX and piY later.
 		let currPY = piY;
 		let meshDone = false; // Break variable for edgemaking loop
-		let circleSamples = resolution*resolution; // So we don't need to do this a lot, could be lower?
+		let circleSamples = resolution*resolution*5; // So we don't need to do this a lot, could be lower?
 		let lastAngle = 0; // Hold on to angle so check starts from last angle, not from top.
 		let xMax = 0,yMax = 0; // Store the min and max coordinate values for vertices to save time in the interior mesh gen, only need to check coords inside these values.
 		let xMin = canvas.width;
@@ -380,12 +387,12 @@ window.addEventListener('load', function(ev) {
 				let sampleY = Math.floor(Math.sin((2*Math.PI*(lastAngle+i))/circleSamples)*resolution);
 				
 				// If sampled pixel has a red value of <= 100 (therefore is an edge), make it the new current vertex
-				if(pixels[4*((sampleX+currPX)+(canvas.width*(sampleY+currPY)))] >= 200){
+				if(pixels[4*((sampleX+currPX)+(canvas.width*(sampleY+currPY)))] >= 100){
 					
 					let iter = 0;
 					let closeToVert = false;
 					while(typeof(vertices[iter]) !== 'undefined'){ // Don't make a new vert close to another, just keep checking. This prevents doubling back in certain places.
-						if(Math.pow(vertices[iter]-(sampleX+currPX),2)+Math.pow(vertices[iter+1]-(sampleY+currPY),2) <= Math.pow(Math.ceil(resolution/4),2)){
+						if(Math.pow(vertices[iter]-(sampleX+currPX),2)+Math.pow(vertices[iter+1]-(sampleY+currPY),2) <= Math.pow(Math.ceil(resolution/2),2)){
 							closeToVert = true;
 						}
 						iter+=3;
@@ -406,12 +413,12 @@ window.addEventListener('load', function(ev) {
 				sampleX = Math.floor(Math.cos((2*Math.PI*(lastAngle-i))/circleSamples)*resolution);
 				sampleY = Math.floor(Math.sin((2*Math.PI*(lastAngle-i))/circleSamples)*resolution);
 				
-				if(pixels[4*((sampleX+currPX)+(canvas.width*(sampleY+currPY)))] >= 200){
+				if(pixels[4*((sampleX+currPX)+(canvas.width*(sampleY+currPY)))] >= 100){
 					
 					let iter = 0;
 					let closeToVert = false;
 					while(typeof(vertices[iter]) !== 'undefined'){ 
-						if(Math.pow(vertices[iter]-(sampleX+currPX),2)+Math.pow(vertices[iter+1]-(sampleY+currPY),2) <= Math.pow(Math.ceil(resolution/4),2)){
+						if(Math.pow(vertices[iter]-(sampleX+currPX),2)+Math.pow(vertices[iter+1]-(sampleY+currPY),2) <= Math.pow(Math.ceil(resolution/2),2)){
 							closeToVert = true;
 						}
 						iter+=3;
@@ -455,7 +462,7 @@ window.addEventListener('load', function(ev) {
 			//If we hit the end, break
 			if(meshDone){
 				console.log("Edge mesh done");
-				console.log(currPX + " " + currPY);
+				console.log("Last point: " + currPX + " " + currPY);
 				break;
 			}
 		
@@ -625,7 +632,7 @@ window.addEventListener('load', function(ev) {
 			centerVertices[i+2] = minDist;
 		}
 		for(let i = 0; i < centerVertices.length; i+=3){ // Spherical falloff
-			centerVertices[i+2] = (maxHeight-Math.pow(maxHeight-centerVertices[i+2],2)-.3);
+			centerVertices[i+2] = (maxHeight-Math.pow(maxHeight-centerVertices[i+2],1.5)-.3);
 		}
 		for(let i = 0; i < outsideVerts.length; i++){
 			centerVertices[outsideVerts[i]*3+2] = 0;
@@ -643,7 +650,7 @@ window.addEventListener('load', function(ev) {
 		
 		let UVs = [];
 		for(let i = 0; i < fullVerts.length; i+=3){
-			UVs.push((fullVerts[i]+2)/4,(fullVerts[i+1]+2)/4);
+			UVs.push(((fullVerts[i]+2)/4)/1,((fullVerts[i+1]+2)/4)/.42 - 1.02);
 		}
 		
 		
@@ -656,6 +663,7 @@ window.addEventListener('load', function(ev) {
 		
 		var mesh = new THREE.Mesh(geometry,material);
 		scene.add(mesh);
+		
 	}
 
 var button = document.querySelector('button');
