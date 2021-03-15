@@ -1,10 +1,15 @@
 var img = new Image();
 img.crossOrigin = 'anonymous';
-img.src = 'light.png';
+img.src = 'barbara.jpg';
 var canvas = document.createElement("canvas");
 var canvas2 = document.createElement("canvas"); // Displays original image for reference
 
 const monoValue = (r,g,b) => (r + g + b) / 3;
+
+// Map range code from RosettaCode
+var mapRange = function(from, to, s) {
+  return to[0] + (s - from[0]) * (to[1] - to[0]) / (from[1] - from[0]);
+};
 
 function rgbValue(img, x, y, c)     // 'c' for RGBA channel
 {
@@ -311,13 +316,14 @@ const controls = new OrbitControls(camera, renderer.domElement);
 var material;
 
 var textureLoader = new THREE.TextureLoader();
-textureLoader.load('light.png', function (texture){
+textureLoader.load('barbara.jpg', function (texture){
 	console.log('texture loaded');
-	material = new THREE.MeshStandardMaterial({metalness: .0, roughness: .3, map: texture, bumpMap: texture, bumpScale: .1, side: THREE.DoubleSide});
+	material = new THREE.MeshStandardMaterial({metalness: .0, roughness: .6, map: texture, bumpMap: texture, bumpScale: .1, side: THREE.DoubleSide});
 });
 const light = new THREE.AmbientLight( 0x707070 ); // soft white light
 const lightPoint = new THREE.PointLight( 0xf0f0f0,2,6,2 );
-const lightPoint2 = new THREE.PointLight( 0xf0f0f0,1,3,2 );
+const lightPoint2 = new THREE.PointLight( 0xf0f0f0,.2,3,2 );
+lightPoint.position.set(2,.5,1);
 lightPoint2.position.set(0,0,-1);
 scene.add( light );
 scene.add(lightPoint);
@@ -604,6 +610,9 @@ window.addEventListener('load', function(ev) {
 			}
 		}
 		
+		// MAPPING UVs
+		
+		
 		// Connecting both sides of mesh
 		/*for(let i = 0; i < centerVertices.length/3; i++){ // These are the correct ways to connect both sides of the mesh, however the input mesh sux so it looks weird
 			indices.push(i,(i+1)%(centerVertices.length/3),(i+1)%(centerVertices.length/3)+centerVertices.length/3);
@@ -617,8 +626,8 @@ window.addEventListener('load', function(ev) {
 		// Converting vert data from pixels to a 2xN coordinate space and displacing on the Z axis.
 		let maxHeight = 0;
 		for(let i = 0; i < centerVertices.length; i+=3){
-			centerVertices[i] = (4*centerVertices[i]/canvas.width)-2;
-			centerVertices[i+1] = -.7*((4*centerVertices[i+1]/canvas.width)-2);
+			centerVertices[i] = mapRange([0,canvas.width],[-2,2],centerVertices[i]);
+			centerVertices[i+1] = mapRange([0,-1*canvas.height],[2,6],centerVertices[i+1]);
 			let minDist = 5;
 			for(let j = 0; j < vertices.length; j+= 3){ // Set z displacement based on distance to closest edge vert
 				let currDist = Math.pow(Math.pow((4*vertices[j]/canvas.width)-2-centerVertices[i],2)+Math.pow(-1*((4*vertices[j+1]/canvas.width)-2)-centerVertices[i+1],2),.25);
@@ -632,7 +641,7 @@ window.addEventListener('load', function(ev) {
 			centerVertices[i+2] = minDist;
 		}
 		for(let i = 0; i < centerVertices.length; i+=3){ // Spherical falloff
-			centerVertices[i+2] = (maxHeight-Math.pow(maxHeight-centerVertices[i+2],1.5)-.3);
+			centerVertices[i+2] = (maxHeight-Math.pow(maxHeight-centerVertices[i+2],2)-.1);
 		}
 		for(let i = 0; i < outsideVerts.length; i++){
 			centerVertices[outsideVerts[i]*3+2] = 0;
@@ -642,16 +651,18 @@ window.addEventListener('load', function(ev) {
 			fullVerts[i+2] = fullVerts[i+2-centerVertices.length]*-1;
 		}
 		
-		// MAPPING UVs
-		// xMin = xMin/canvas.width;
-		// xMax = yMax/canvas.width;
-		// yMax = -1*(yMax/canvas.width)+1;
-		// yMin = -1*(yMin/canvas.width)+1;
-		
 		let UVs = [];
+		let fromY = [-2,2];
+		let fromX = [-2,2];
+		let to = [0,1];
 		for(let i = 0; i < fullVerts.length; i+=3){
-			UVs.push(((fullVerts[i]+2)/4)/1,((fullVerts[i+1]+2)/4)/.42 - 1.02);
+			//UVs.push(((fullVerts[i]+2)/4)/1,((fullVerts[i+1]+2)/4)/.42 - 1.02);
+			
+			UVs.push(mapRange(fromX,to,fullVerts[i]),mapRange(fromY,to,fullVerts[i+1]));
+			// console.log(fullVerts[i]+2)/4;
+			// console.log(fullVerts[i+1]+2)/4;
 		}
+		
 		
 		
 		// MAKING THE MESH
@@ -663,6 +674,20 @@ window.addEventListener('load', function(ev) {
 		
 		var mesh = new THREE.Mesh(geometry,material);
 		scene.add(mesh);
+		
+		var geo = new THREE.BoxGeometry(.2,.2,.2);
+		var mesh1 = new THREE.Mesh(geo);
+		var mesh2 = new THREE.Mesh(geo);
+		var mesh3 = new THREE.Mesh(geo);
+		var mesh4 = new THREE.Mesh(geo);
+		mesh1.position.set(2,2,0);
+		mesh2.position.set(2,-2,0);
+		mesh3.position.set(-2,-2,0);
+		mesh4.position.set(-2,2,0);
+		scene.add(mesh1);
+		scene.add(mesh2);
+		scene.add(mesh3);
+		scene.add(mesh4);
 		
 	}
 
@@ -688,7 +713,7 @@ function animate() {
 	
 	fram++;
 	
-	lightPoint.position.set(Math.sin(fram/30)*2,Math.sin((fram/30)+(Math.PI/2))*2,2);
+	//lightPoint.position.set(Math.sin(fram/30)*2,Math.sin((fram/30)+(Math.PI/2))*2,2);
 	
 		requestAnimationFrame(animate);
 		renderer.render(scene, camera);
