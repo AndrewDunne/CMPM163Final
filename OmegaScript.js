@@ -640,8 +640,11 @@ window.addEventListener('load', function(ev) {
 			}
 			centerVertices[i+2] = minDist;
 		}
-		for(let i = 0; i < centerVertices.length; i+=3){ // Spherical falloff
-			centerVertices[i+2] = (maxHeight-Math.pow(maxHeight-centerVertices[i+2],2)-.1);
+		/*for(let i = 0; i < centerVertices.length; i+=3){ // Spherical falloff
+			centerVertices[i+2] = (maxHeight-Math.pow(maxHeight-centerVertices[i+2],2)-.5);
+		}*/
+		for(let i = 0; i < centerVertices.length; i+=3){ // Constant falloff
+			centerVertices[i+2] = .2;
 		}
 		for(let i = 0; i < outsideVerts.length; i++){
 			centerVertices[outsideVerts[i]*3+2] = 0;
@@ -713,7 +716,7 @@ function animate() {
 	
 	fram++;
 	
-	//lightPoint.position.set(Math.sin(fram/30)*2,Math.sin((fram/30)+(Math.PI/2))*2,2);
+	lightPoint.position.set(Math.sin(fram/30)*2,Math.sin((fram/30)+(Math.PI/2))*2,2);
 	
 		requestAnimationFrame(animate);
 		renderer.render(scene, camera);
