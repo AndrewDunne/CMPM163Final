@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+	<head>
+	<meta charset="utf-8">
+		<title>Image to model</title>
+		<style>
+			body { margin: 0; }
+			canvas { display: block; }
+		</style>
+	</head>
+	<body>
+		<button type="button" style="float:right;line-height: 3em;">Generate Mesh</button>
+		<div><p style="float:center;">Mesh Resolution (lower is better): <span id="resVal" style="float:center;"></span></p></div>
+		<input type="range" min="3" max="10" value="3" class="slider" id="myRes" style="float:center;">
+		<script src="three.js-master/build/three.js"></script>
+		<script src="OmegaScript.js" type="module"></script>
+	</body>
+</html>
