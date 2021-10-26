@@ -1,6 +1,6 @@
 var img = new Image();
 img.crossOrigin = 'anonymous';
-img.src = 'barbara.jpg';
+img.src = 'testImages/barbara.jpg';
 var canvas = document.createElement("canvas");
 var canvas2 = document.createElement("canvas"); // Displays original image for reference
 
@@ -316,7 +316,7 @@ const controls = new OrbitControls(camera, renderer.domElement);
 var material;
 
 var textureLoader = new THREE.TextureLoader();
-textureLoader.load('barbara.jpg', function (texture){
+textureLoader.load('testImages/barbara.jpg', function (texture){
 	console.log('texture loaded');
 	material = new THREE.MeshStandardMaterial({metalness: .0, roughness: .6, map: texture, bumpMap: texture, bumpScale: .1, side: THREE.DoubleSide});
 });
