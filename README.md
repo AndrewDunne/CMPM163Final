@@ -1,6 +1,7 @@
 # CMPM163Final
 
 This program takes an image as input, and creates an even-width prism mesh using the input's silhouette and texture.
+Edge detection part of program by Casey Moropoulos.
 
 ### Usage
 - Run this program through a web server, eg 'Web server for Chrome'
